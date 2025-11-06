@@ -1,0 +1,14 @@
+.DS_Store
+npm-debug.log
+
+# === BACKEND ===
+
+/backend/node_modules
+/backend/.env
+
+# === FRONTEND ===
+
+/frontend/node_modules
+/frontend/.env
+/frontend/.env.local
+/frontend/dist
