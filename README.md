@@ -1,77 +1,19 @@
-# Projeto de Gestão Financeira - Getra
+Eu criei a estrutura de rotas e controladores para todas as tabelas que estavam no arquivo schema.prisma.
 
-Este repositório contém o código-fonte completo do projeto, dividido em:
+Organização das pastas:
 
-* `backend`: O **Backend (API)** em Node.js, Express e Prisma.
-* `frontend`: O **Frontend (Aplicação Web)** em React e Vite.
+Pasta prisma: Contem o arquivo com o desenho do banco de dados.
 
----
+Pasta src/controllers: Contem 10 arquivos diferentes, um para cada tabela
 
-## Backend 
+Pasta src/routes: Contem o arquivo que organiza os endereços da API.
 
-### 1. Pré-requisito Específico
+Pasta generated: Esta pasta fica dentro da pasta backend e guarda o motor do banco de dados.
 
-* [PostgreSQL](https://www.postgresql.org/download/) (um banco de dados rodando localmente ou em um serviço de cloud como [Neon](https://neon.tech/) ou [Supabase](https://supabase.com/)).
+avisos:
 
-### 2. Navegação e Instalação
+para Gerar o motor do banco Digite npx prisma generate. Isso e necessario porque a pasta generated nao vai para o Github.
 
-1.  Abra seu terminal na raiz do projeto e navegue para a pasta do backend:
-    ```bash
-    cd gestao-getra
-    ```
+Crie um arquivo chamado .env e coloque o link do banco de dados na variavel DATABASE_URL.
 
-2.  Instale as dependências:
-    ```bash
-    npm install
-    ```
-
-### 3. Configuração do Ambiente
-
-1.  Este projeto usa o Prisma e precisa de um banco PostgreSQL.
-2.  Crie uma cópia do arquivo `.env.example`:
-    ```bash
-    cp .env.example .env
-    ```
-3.  Abra o arquivo `.env` (que você acabou de criar) e **preencha a `DATABASE_URL`** com os dados da sua conexão do PostgreSQL.
-
-### 4. Rodando a Aplicação (Desenvolvimento)
-
-1.  Para rodar o servidor em modo de desenvolvimento (com auto-restart):
-    ```bash
-    npm run dev
-    ```
-2.  O servidor do backend estará rodando em `http://localhost:3000`.
-
----
-
-## Frontend (React + Vite)
-
-**Importante:** O frontend precisa que o [Backend (backend)](#-backend-gestao-getra) esteja rodando ao mesmo tempo para funcionar corretamente.
-
-### 1. Navegação e Instalação
-
-1.  Abra um **novo terminal**, na raiz do projeto, e navegue para a pasta do frontend:
-    ```bash
-    cd frontend
-    ```
-
-2.  Instale as dependências:
-    ```bash
-    npm install
-    ```
-
-### 3. Configuração do Ambiente
-
-1.  Crie uma cópia do arquivo de ambiente de exemplo:
-    ```bash
-    cp .env.example .env
-    ```
-2.  O arquivo `.env` já deve estar configurado corretamente (`VITE_API_URL=http://localhost:3000`) para o desenvolvimento local.
-
-### 4. Rodando a Aplicação (Desenvolvimento)
-
-1.  Execute o servidor de desenvolvimento do Vite:
-    ```bash
-    npm run dev
-    ```
-2.  O servidor do frontend irá iniciar (geralmente em `http://localhost:5173`) e abrirá automaticamente no seu navegador.
+criei uma copia do arquivo schema.prisma na pasta backend/prisma para manter o desenho do banco de dados junto com o backend para facilitar o trabalho
