@@ -22,6 +22,9 @@ router.post('/auth/login', authController.login);
 
 // --- 4. Suas Rotas do CRUD ---
 router.get('/clientes', clienteController.listar);
+router.post('/clientes', clienteController.criar);
+router.put('/clientes/:id', clienteController.atualizar); 
+router.delete('/clientes/:id', clienteController.deletar);
 router.get('/usuarios', usuarioController.listar);
 router.get('/servicos', servicoController.listar);
 router.get('/faturas', faturaController.listar);

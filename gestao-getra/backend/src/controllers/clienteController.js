@@ -1,5 +1,5 @@
 const path = require('path');
-const { PrismaClient } = require(path.resolve(__dirname, '../../generated/prisma'));
+const { PrismaClient } = require('@prisma/client'); // <--- O jeito padrão e seguro
 const prisma = new PrismaClient();
 module.exports = {
   //Lista todos os clientes
