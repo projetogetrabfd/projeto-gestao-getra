@@ -74,4 +74,4 @@ const RedefinirSenha = ({ onNavigate }) => {
     );
 };
 
-export default RedefinirSenha;
+export { RedefinirSenha };

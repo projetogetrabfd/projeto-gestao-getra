@@ -1,11 +1,16 @@
+// ARQUIVO: backend/index.js
 const express = require('express');
+const cors = require('cors'); // 1. Importar o CORS
+const routes = require('./src/routes'); // Suas rotas
+
 const app = express();
-const port = 3000; 
+app.use(cors()); 
 
-app.get('/', (req, res) => {
-  res.send('Olá, Mundo!');
-});
+app.use(express.json());
 
-app.listen(port, () => {
-  console.log(`Servidor rodando na porta http://localhost:${port}`);
+app.use(routes); 
+
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(` Servidor rodando na porta http://localhost:${PORT}`);
 });

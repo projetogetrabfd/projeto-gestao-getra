@@ -1,0 +1,185 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Periodicidade {
+  MENSAL
+  ANUAL
+}
+
+enum StatusRecorrencia {
+  ATIVA
+  PAUSADA
+  CANCELADA
+}
+
+enum StatusFatura {
+  PENDENTE
+  PAGA
+  VENCIDA
+}
+
+enum TipoPagamentoPreferencial {
+  BOLETO
+  PIX
+}
+
+enum StatusNotaFiscal {
+  PENDENTE
+  EMITIDA
+  CANCELADA
+  ERRO
+}
+
+enum FormaPagamento {
+  PIX
+  TRANSFERENCIA
+  BOLETO
+}
+
+enum StatusContaPagar {
+  PENDENTE
+  PAGA
+  VENCIDA
+}
+
+model Cliente {
+  id                Int       @id @default(autoincrement())
+  nome_razao_social String
+  cpf_cnpj          String    @unique
+  email             String    @db.VarChar(100)
+  telefone          String    @db.VarChar(20)
+  endereco_completo String
+
+  recorrencias      Recorrencia[]
+  faturas           Fatura[]
+}
+
+model Servico {
+  id           Int      @id @default(autoincrement())
+  nome         String    @db.VarChar(100)
+  descricao    String?
+  valor_padrao Decimal
+
+  recorrencias Recorrencia[]
+}
+
+model Perfil {
+  id         Int     @id @default(autoincrement())
+  nome       String   @db.VarChar(50)
+  permissoes String
+
+  usuarios   Usuario[]
+}
+
+model Usuario {
+  id         Int      @id @default(autoincrement())
+  id_perfil  Int
+  nome       String
+  email      String   @unique
+  senha_hash String   @db.VarChar(255)
+  ativo      Boolean
+
+  perfil                 Perfil     @relation(fields: [id_perfil], references: [id])
+  faturas_criadas        Fatura[]
+  contas_pagar_lancadas  ContaPagar[]
+}
+
+model Parceiro {
+  id                  Int      @id @default(autoincrement())
+  nome_razao_social   String
+  cpf_cnpj            String   @unique
+  email_contato       String   @db.VarChar(100)
+  dados_bancarios_pix String?
+
+  contas_pagar        ContaPagar[]
+}
+
+model Recorrencia {
+  id            Int                 @id @default(autoincrement())
+  id_cliente    Int
+  id_servico    Int
+  valor_cobrado Decimal
+  periodicidade Periodicidade
+  dia_vencimento Int
+  status        StatusRecorrencia
+
+  cliente       Cliente   @relation(fields: [id_cliente], references: [id])
+  servico       Servico   @relation(fields: [id_servico], references: [id])
+  faturas       Fatura[]
+
+}
+
+model Fatura {
+  id               Int         @id @default(autoincrement())
+  id_cliente       Int
+  id_recorrencia   Int?
+  id_usuario_criador Int?
+  valor_total      Decimal
+  data_vencimento  DateTime
+  data_pagamento   DateTime?
+  status           StatusFatura
+  tipo_pagamento_preferencial TipoPagamentoPreferencial?
+  id_externo_gateway String?   @db.VarChar(255)
+  linha_digitavel_boleto String?
+  link_qr_code_pix String?
+
+  cliente        Cliente    @relation(fields: [id_cliente], references:[id])
+  recorrencia    Recorrencia? @relation(fields: [id_recorrencia], references:[id])
+  usuario_criador Usuario?   @relation(fields: [id_usuario_criador], references:[id])
+
+  transacoes     Transacao[]
+  nota_fiscal    NotaFiscal?
+}
+
+model ContaPagar {
+  id                 Int     @id @default(autoincrement())
+  id_parceiro        Int
+  id_usuario_lancamento Int
+  descricao          String  @db.VarChar(255)
+  valor              Decimal
+  data_vencimento    DateTime
+  data_pagamento     DateTime?
+  forma_pagamento    FormaPagamento
+  status             StatusContaPagar
+
+  parceiro           Parceiro @relation(fields: [id_parceiro], references: [id])
+  usuario_lancamento Usuario  @relation(fields: [id_usuario_lancamento], references: [id])
+}
+
+model NotaFiscal {
+  id             Int        @id @default(autoincrement())
+  id_fatura      Int        @unique
+  numero         Int
+  data_emissao   DateTime
+  valor_total    Decimal
+  status_api     StatusNotaFiscal
+  id_externo_api String?
+  link_xml       String?
+  link_pdf       String?
+
+  fatura         Fatura     @relation(fields: [id_fatura], references: [id])
+}
+
+model Transacao {
+  id            Int      @id @default(autoincrement())
+  id_fatura     Int
+  data_hora     DateTime
+  evento        String   @db.VarChar(100)
+  tipo_notificacao_api String?
+  dados_resposta Json?
+
+  fatura        Fatura   @relation(fields: [id_fatura], references: [id])
+}

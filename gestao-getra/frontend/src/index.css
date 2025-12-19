@@ -1,1 +1,153 @@
-/* Limpo para evitar conflitos com login.css */
+:root {
+  /* Paleta Financeira Getra */
+  --primary-dark: #0f172a;
+  --primary-blue: #1e3a8a;
+  --accent-green: #059669;
+  --accent-hover: #047857;
+  --bg-light: #f3f4f6;
+  --text-dark: #1f2937;
+  --white: #ffffff;
+}
+
+/* --- CORREÇÃO DO TAMANHO DA TELA --- */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+}
+
+/* --- Container que ocupa a tela toda (Fundo Azul) --- */
+.auth-container {
+  display: flex;
+  justify-content: center; /* Centraliza horizontalmente */
+  align-items: center;     /* Centraliza verticalmente */
+  
+  width: 100vw;            /* 100% da largura da janela */
+  min-height: 100vh;       /* 100% da altura da janela */
+  
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%);
+  position: absolute;      /* Garante que fique por cima de tudo */
+  top: 0;
+  left: 0;
+}
+
+/* --- O Cartão Branco --- */
+.auth-card {
+  background: var(--white);
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  
+  width: 100%;
+  max-width: 400px; /* Largura máxima do cartão */
+  
+  text-align: center;
+  z-index: 10; /* Garante que o cartão fique na frente do fundo */
+}
+
+/* --- Restante dos estilos (Iguais ao anterior) --- */
+.auth-card h1, .auth-card h2 {
+  color: var(--primary-dark);
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+.btn-primary {
+  background-color: var(--accent-green);
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+.auth-links {
+  margin-top: 15px;
+  font-size: 0.9rem;
+}
+
+.auth-links a {
+  color: var(--primary-blue);
+  text-decoration: none;
+}
+
+/* Dashboard Styles (Mantidos) */
+.dashboard-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.dashboard-header {
+  background-color: var(--primary-dark);
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.btn-logout {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.dashboard-main {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+.client-list {
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+}
+.client-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-left: 5px solid var(--accent-green);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
