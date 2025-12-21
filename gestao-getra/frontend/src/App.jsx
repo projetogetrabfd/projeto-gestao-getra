@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import './App.css';
 import Login from './telaLogin/Login';
 import RedefinirSenha from './telaLogin/redefinirSenha/RedefinirSenha';
 import CadastroUsuario from './telaLogin/cadastroUsuario/CadastroUsuario';
