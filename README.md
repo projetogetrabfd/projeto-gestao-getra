@@ -1,77 +1,14 @@
-# Projeto de Gestão Financeira - Getra
+# Preview da UI
 
-Este repositório contém o código-fonte completo do projeto, dividido em:
+## 📊 Tela de Faturamento
+<p align="center">
+<img src="https://github.com/user-attachments/assets/0dbbd63e-da4c-4f11-a973-9abc9ae809bf" alt="Tela de Faturamento" width="600"/>
+</p>
 
-* `backend`: O **Backend (API)** em Node.js, Express e Prisma.
-* `frontend`: O **Frontend (Aplicação Web)** em React e Vite.
 
----
-
-## Backend 
-
-### 1. Pré-requisito Específico
-
-* [PostgreSQL](https://www.postgresql.org/download/) (um banco de dados rodando localmente ou em um serviço de cloud como [Neon](https://neon.tech/) ou [Supabase](https://supabase.com/)).
-
-### 2. Navegação e Instalação
-
-1.  Abra seu terminal na raiz do projeto e navegue para a pasta do backend:
-    ```bash
-    cd gestao-getra
-    ```
-
-2.  Instale as dependências:
-    ```bash
-    npm install
-    ```
-
-### 3. Configuração do Ambiente
-
-1.  Este projeto usa o Prisma e precisa de um banco PostgreSQL.
-2.  Crie uma cópia do arquivo `.env.example`:
-    ```bash
-    cp .env.example .env
-    ```
-3.  Abra o arquivo `.env` (que você acabou de criar) e **preencha a `DATABASE_URL`** com os dados da sua conexão do PostgreSQL.
-
-### 4. Rodando a Aplicação (Desenvolvimento)
-
-1.  Para rodar o servidor em modo de desenvolvimento (com auto-restart):
-    ```bash
-    npm run dev
-    ```
-2.  O servidor do backend estará rodando em `http://localhost:3000`.
-
----
-
-## Frontend (React + Vite)
-
-**Importante:** O frontend precisa que o [Backend (backend)](#-backend-gestao-getra) esteja rodando ao mesmo tempo para funcionar corretamente.
-
-### 1. Navegação e Instalação
-
-1.  Abra um **novo terminal**, na raiz do projeto, e navegue para a pasta do frontend:
-    ```bash
-    cd frontend
-    ```
-
-2.  Instale as dependências:
-    ```bash
-    npm install
-    ```
-
-### 3. Configuração do Ambiente
-
-1.  Crie uma cópia do arquivo de ambiente de exemplo:
-    ```bash
-    cp .env.example .env
-    ```
-2.  O arquivo `.env` já deve estar configurado corretamente (`VITE_API_URL=http://localhost:3000`) para o desenvolvimento local.
-
-### 4. Rodando a Aplicação (Desenvolvimento)
-
-1.  Execute o servidor de desenvolvimento do Vite:
-    ```bash
-    npm run dev
-    ```
-2.  O servidor do frontend irá iniciar (geralmente em `http://localhost:5173`) e abrirá automaticamente no seu navegador.
+## 🔐 Telas de Login
+<p align="center">
+<img src="https://github.com/user-attachments/assets/0b78c7fc-0d0c-4b83-ae96-d846519d52f1" alt="Login 1" width="400"/>
+<img src="https://github.com/user-attachments/assets/ba53e318-18bd-4866-b588-027a524fd16b" alt="Login 2" width="400"/>
+<img src="https://github.com/user-attachments/assets/752b780f-2749-4483-8ef0-25c100ad60a5" alt="Login 3" width="400"/>
+</p>
