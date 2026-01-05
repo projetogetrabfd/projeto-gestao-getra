@@ -1,0 +1,40 @@
+1️ Instalação de Dependências
+Instalar as bibliotecas de gráficos:
+
+PowerShell
+Run
+npm.cmd install chart.js react-chartjs-2
+
+
+2️ Estrutura Criada
+Organizei os arquivos dentro de src/telaFaturamento/ para manter o projeto limpo:
+
+pages/Faturamento.jsx: A tela principal que busca os dados e organiza os cards.
+components/: Contém os blocos visuais reutilizáveis (Card, LineChart, BarChart, DoughnutChart).
+services/faturamentoService.js: Simula a API (backend).
+styles/faturamento.css: Estilização responsiva e moderna.
+
+3️ Como Funciona
+Aqui está o fluxo dos dados na sua nova tela:
+
+O Serviço (faturamentoService.js):
+
+Criei uma função getFaturamentoData() que finge ser o backend.
+Ela tem um pequeno "atraso" (delay) proposital para simular o tempo de resposta de uma internet real.
+Futuro Backend: Quando você tiver a API, só precisará substituir o conteúdo dessa função para usar fetch ou axios.
+
+A Página (Faturamento.jsx):
+
+Ao abrir, ela usa o useEffect para chamar o serviço.
+Enquanto os dados não chegam, ela exibe "Carregando...".
+Assim que os dados chegam, ela os guarda no estado (useState) e desenha a tela.
+Os Gráficos (Chart.js):
+
+Cada gráfico recebe apenas os dados necessários (ex: só o array de faturamento).
+Configurei as cores e legendas para ficarem com visual profissional.
+O gráfico de linha compara duas informações (Faturamento vs Despesas) no mesmo visual.
+
+
+4 Próximos Passos Sugeridos
+Rode o projeto com npm run dev para ver o resultado.
+Experimente mudar os valores no arquivo de serviço (faturamentoService.js) para ver os gráficos se atualizarem.
