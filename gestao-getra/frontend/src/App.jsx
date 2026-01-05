@@ -1,25 +1,36 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
+// Importação das Telas
 import { Login } from './telaLogin/Login';
-import { RedefinirSenha } from './telaLogin/redefinirSenha/RedefinirSenha';
 import { Cadastro } from './telaLogin/cadastroUsuario/CadastroUsuario';
+import { RedefinirSenha } from './telaLogin/redefinirSenha/RedefinirSenha';
 
-// 1. Importe a nova tela (Ajuste o caminho se criou em outra pasta)
-import { Clientes } from './telaClientes/Clientes'; 
+// Telas do Sistema
+import { Dashboard } from './telaDashboard/Dashboard';
+import { Clientes } from './telaClientes/Clientes';
+import { Faturas } from './telaFaturas/Faturas';
+import { Servicos } from './telaServicos/Servicos';
+import { NotasFiscais } from './telaNotas/NotasFiscais';
 
 function App() {
   return (
     <div className="app-container">
       <Routes>
+        {/* Rotas Públicas */}
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />
         <Route path="/redefinir" element={<RedefinirSenha />} />
 
-        {/* 2. Adicione a rota oficial */}
+        {/* Rotas Privadas (Do Menu Lateral) */}
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clientes" element={<Clientes />} />
+        <Route path="/faturas" element={<Faturas />} />
+        <Route path="/servicos" element={<Servicos />} />
+        <Route path="/notas" element={<NotasFiscais />} />
 
+        {/* Qualquer outra coisa volta pro login */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>

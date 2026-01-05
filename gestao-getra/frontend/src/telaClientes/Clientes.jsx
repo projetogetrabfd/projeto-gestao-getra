@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Sidebar } from '../Components/Sidebar';
 
 export function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -113,18 +114,16 @@ export function Clientes() {
   }
 
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
-        <div style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Gestão Getra</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <span>Olá, <strong>{usuario?.nome}</strong></span>
-          <button onClick={handleLogout} className="btn-logout">Sair</button>
-        </div>
-      </header>
+    <div className="app-layout">
+      {/* 1. O Menu Lateral Fixo */}
+      <Sidebar />
 
-      <main className="dashboard-main">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 className="section-title" style={{marginBottom: 0, border: 'none'}}>Carteira de Clientes</h2>
+      {/* 2. A Área de Conteúdo (Direita) */}
+      <div className="content-area">
+        
+        {/* Um header simples branco só para dizer onde estamos */}
+        <header className="dashboard-header-simple">
+          <h2 style={{ fontSize: '1.5rem', color: 'var(--primary-dark)' }}>Gestão de Clientes</h2>
           <button 
             className="btn-primary" 
             style={{ width: 'auto', padding: '10px 20px' }}
@@ -132,98 +131,65 @@ export function Clientes() {
           >
             + Novo Cliente
           </button>
-        </div>
-        
-        {clientes.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-            <p>Nenhum cliente encontrado.</p>
-          </div>
-        ) : (
-          <ul className="client-list">
-            {clientes.map(cliente => (
-              <li key={cliente.id} className="client-card">
-                <div className="client-info">
-                  <strong>{cliente.nome_razao_social}</strong>
-                  <span>{cliente.email}</span>
-                  <span style={{fontSize: '0.8rem', color: '#999', display:'block'}}>
-                    {cliente.telefone} • {cliente.cpf_cnpj}
-                  </span>
-                </div>
-                
-                {/* BOTÕES DE AÇÃO */}
-                <div className="actions-container">
-                  <button 
-                    className="btn-edit" 
-                    onClick={() => abrirModalEdicao(cliente)}
-                  >
-                    Editar
-                  </button>
-                  <button 
-                    className="btn-delete" 
-                    onClick={() => handleDeletar(cliente.id)}
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </main>
+        </header>
 
+        {/* O Conteúdo Principal (Lista) */}
+        <main className="dashboard-main">
+          
+          {clientes.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+              <p>Nenhum cliente encontrado.</p>
+            </div>
+          ) : (
+            <ul className="client-list">
+              {clientes.map(cliente => (
+                <li key={cliente.id} className="client-card">
+                  <div className="client-info">
+                    <strong>{cliente.nome_razao_social}</strong>
+                    <span>{cliente.email}</span>
+                    <span style={{fontSize: '0.8rem', color: '#999', display:'block'}}>
+                      {cliente.telefone} • {cliente.cpf_cnpj}
+                    </span>
+                  </div>
+                  
+                  <div className="actions-container">
+                    <button className="btn-edit" onClick={() => abrirModalEdicao(cliente)}>
+                      Editar
+                    </button>
+                    <button className="btn-delete" onClick={() => handleDeletar(cliente.id)}>
+                      Excluir
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </main>
+      </div>
+
+      {/* MODAL (Pode ficar aqui no final, igual estava antes) */}
       {modalAberto && (
         <div className="modal-overlay">
-          <div className="modal-content">
+           {/* ... (o código do modal continua igual) ... */}
+           {/* ... Copie o conteúdo interno do modal antigo aqui ... */}
+           <div className="modal-content">
             <div className="modal-header">
-              {/* Título dinâmico */}
               <h3>{idEmEdicao ? 'Editar Cliente' : 'Adicionar Cliente'}</h3>
               <button className="btn-close" onClick={() => setModalAberto(false)}>×</button>
             </div>
             
             <form onSubmit={handleSalvarCliente}>
               <div className="form-group">
-                <input 
-                  type="text" 
-                  placeholder="Nome / Razão Social" 
-                  value={nomeRazao}
-                  onChange={e => setNomeRazao(e.target.value)}
-                  required 
-                />
-                <input 
-                  type="text" 
-                  placeholder="CPF ou CNPJ" 
-                  value={cpfCnpj}
-                  onChange={e => setCpfCnpj(e.target.value)}
-                  required 
-                />
-                <input 
-                  type="email" 
-                  placeholder="Email" 
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required 
-                />
-                <input 
-                  type="text" 
-                  placeholder="Telefone" 
-                  value={telefone}
-                  onChange={e => setTelefone(e.target.value)}
-                />
-                <input 
-                  type="text" 
-                  placeholder="Endereço Completo" 
-                  value={endereco}
-                  onChange={e => setEndereco(e.target.value)}
-                />
+                <input type="text" placeholder="Nome / Razão Social" value={nomeRazao} onChange={e => setNomeRazao(e.target.value)} required />
+                <input type="text" placeholder="CPF ou CNPJ" value={cpfCnpj} onChange={e => setCpfCnpj(e.target.value)} required />
+                <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+                <input type="text" placeholder="Telefone" value={telefone} onChange={e => setTelefone(e.target.value)} />
+                <input type="text" placeholder="Endereço Completo" value={endereco} onChange={e => setEndereco(e.target.value)} />
               </div>
 
               <div className="modal-actions">
-                <button type="button" className="btn-secondary" onClick={() => setModalAberto(false)}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-primary">
-                  {idEmEdicao ? 'Salvar Alterações' : 'Cadastrar Cliente'}
-                </button>
+                <button type="button" className="btn-secondary" onClick={() => setModalAberto(false)}>Cancelar</button>
+                <button type="submit" className="btn-primary">{idEmEdicao ? 'Salvar Alterações' : 'Cadastrar Cliente'}</button>
               </div>
             </form>
           </div>

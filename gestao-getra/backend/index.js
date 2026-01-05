@@ -8,6 +8,7 @@ app.use(cors());
 
 app.use(express.json());
 
+app.use(express.urlencoded({ extended: true })); // Permite ler dados de formulários padrão
 app.use(routes); 
 
 const PORT = 3000;

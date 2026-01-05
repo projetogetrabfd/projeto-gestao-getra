@@ -1,9 +1,8 @@
-const path = require('path');
-const { PrismaClient } = require(path.resolve(__dirname, '../../generated/prisma'));
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 module.exports = {
-  //Lista todos os serviços
+  // Listar serviços
   async listar(req, res) {
     try {
       const servicos = await prisma.servico.findMany();
@@ -13,47 +12,46 @@ module.exports = {
     }
   },
 
-  //Cria um novo serviço
+  // Criar serviço
   async criar(req, res) {
     try {
       const { nome, descricao, valor_padrao } = req.body;
-      const novo = await prisma.servico.create({
-        data: { 
-          nome, 
-          descricao, 
-          valor_padrao: parseFloat(valor_padrao) 
+      const novoServico = await prisma.servico.create({
+        data: {
+          nome,
+          descricao,
+          valor_padrao: parseFloat(valor_padrao)
         }
       });
-      return res.status(201).json(novo);
+      return res.status(201).json(novoServico);
     } catch (error) {
       return res.status(400).json({ erro: "Erro ao criar serviço." });
     }
   },
 
-  //Permite editar um serviço existente
+  // Atualizar
   async atualizar(req, res) {
     try {
       const { id } = req.params;
+      const { nome, descricao, valor_padrao } = req.body;
       const servicoAtualizado = await prisma.servico.update({
         where: { id: Number(id) },
-        data: req.body
+        data: { nome, descricao, valor_padrao: parseFloat(valor_padrao) }
       });
       return res.json(servicoAtualizado);
     } catch (error) {
-      return res.status(404).json({ erro: "Serviço não encontrado ou erro na atualização." });
+      return res.status(400).json({ erro: "Erro ao atualizar serviço." });
     }
   },
 
-  //Remove um serviço
+  // Deletar
   async deletar(req, res) {
     try {
       const { id } = req.params;
-      await prisma.servico.delete({
-        where: { id: Number(id) }
-      });
+      await prisma.servico.delete({ where: { id: Number(id) } });
       return res.status(204).send();
     } catch (error) {
-      return res.status(404).json({ erro: "Erro ao remover serviço." });
+      return res.status(400).json({ erro: "Erro ao excluir serviço." });
     }
   }
 };
