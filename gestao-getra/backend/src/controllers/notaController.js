@@ -33,16 +33,10 @@ module.exports = {
         parseInt(partesData[0])
       );
 
-      // ---------------------------------------------------------
-      // PASSO 2: BUSCAR O CLIENTE PELO CNPJ
-      // ---------------------------------------------------------
-      // Estamos assumindo que sua tabela Cliente tem um campo 'cpf_cnpj' ou similar.
-      // Ajuste 'cpf_cnpj' para o nome exato da coluna na sua tabela Cliente.
+      
       
       const clienteEncontrado = await prisma.cliente.findFirst({
         where: {
-          // REMOVA A FORMATAÇÃO DO BANCO SE NECESSÁRIO (ex: tirar pontos e traços)
-          // Aqui estou buscando pelo CNPJ limpo ou formatado, dependendo de como você salva
            OR: [
              { cpf_cnpj: cnpj_emitente }, // Busca exata (ex: 12.345...)
              { cpf_cnpj: cnpj_emitente.replace(/\D/g, '') } // Busca apenas números
@@ -57,20 +51,17 @@ module.exports = {
         });
       }
 
-      // ---------------------------------------------------------
-      // PASSO 3: CRIAR FATURA E NOTA (TUDO JUNTO)
-      // ---------------------------------------------------------
-      
+  
       const novaNotaComFatura = await prisma.notaFiscal.create({
         data: {
-          // --- DADOS DA NOTA FISCAL ---
+          // dados da nota fiscal
           numero: numeroInt,
           data_emissao: dataFormatada,
           valor_total: valorDecimal,
-          status_api: 'PENDENTE', // <--- Ajuste conforme seu Enum StatusNotaFiscal
+          status_api: 'PENDENTE', 
           link_pdf: link_pdf || null,
           
-          // --- DADOS DA FATURA (Criação Aninhada) ---
+         
           fatura: {
             create: {
               // Conecta ao cliente que achamos lá em cima
@@ -103,6 +94,20 @@ module.exports = {
         erro: "Erro interno do servidor.", 
         detalhe: error.message 
       });
+    }
+  },
+
+  async listarNotas(req, res) {
+    try {
+      const notas = await prisma.notaFiscal.findMany({
+        orderBy: { id: 'desc' }, 
+        include: {
+          fatura: true 
+        }
+      });
+      return res.json(notas);
+    } catch (error) {
+      return res.status(500).json({ erro: "Erro ao buscar notas." });
     }
   }
 };

@@ -58,10 +58,32 @@ module.exports = {
   async deletar(req, res) {
     try {
       const { id } = req.params;
-      await prisma.fatura.delete({ where: { id: Number(id) } });
-      return res.status(204).send();
+      const idFatura = Number(id);
+
+      // 1. Apagar Transações vinculadas (Se a fatura já foi paga)
+      // Se não tiver transação, ele só ignora e passa pro próximo
+      await prisma.transacao.deleteMany({
+        where: { id_fatura: idFatura } // Verifique se no seu banco é id_fatura ou faturaId
+      });
+
+      // 2. Apagar Notas Fiscais vinculadas (O PDF que você upou)
+      await prisma.notaFiscal.deleteMany({
+        where: { id_fatura: idFatura }
+      });
+
+      // 3. AGORA SIM, apaga a Fatura
+      await prisma.fatura.delete({
+        where: { id: idFatura },
+      });
+
+      return res.status(200).json({ mensagem: "Fatura e todos os vínculos excluídos com sucesso." });
+
     } catch (error) {
-      return res.status(400).json({ erro: "Erro ao excluir fatura." });
+      console.error("Erro ao deletar fatura:", error);
+      return res.status(500).json({ 
+        erro: "Não foi possível excluir.",
+        detalhe: error.message 
+      });
     }
   }
 };

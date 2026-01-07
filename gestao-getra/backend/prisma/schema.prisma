@@ -179,5 +179,5 @@ model Transacao {
   tipo_notificacao_api String?
   dados_resposta       Json?
 
-  fatura Fatura @relation(fields: [id_fatura], references: [id])
+  fatura Fatura @relation(fields: [id_fatura], references: [id], onDelete: Cascade)
 }
