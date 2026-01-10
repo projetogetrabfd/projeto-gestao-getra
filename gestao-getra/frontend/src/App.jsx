@@ -13,6 +13,7 @@ import { Faturas } from './telaFaturas/Faturas';
 import { Analise } from './telaAnalise/Analise';
 import { Servicos } from './telaServicos/Servicos';
 import { NotasFiscais } from './telaNotas/NotasFiscais';
+import { Pagamento } from './pagamento/Pagamento';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route path="/analise" element={<Analise />} />
         <Route path="/servicos" element={<Servicos />} />
         <Route path="/notas" element={<NotasFiscais />} />
+        <Route path="/pagamento" element={<Pagamento />} />
 
         {/* Qualquer outra coisa volta pro login */}
         <Route path="*" element={<Navigate to="/" />} />

@@ -9,7 +9,7 @@ const faturaController = require('../controllers/faturaController');
 const servicoController = require('../controllers/servicoController');
 const uploadController = require('../controllers/uploadController');
 const NotaController = require('../controllers/notaController'); 
-
+const pagamentoController = require('../pagamento/pagamentoController');
 
 // Leitura de PDF 
 // ATENÇÃO: Aqui está esperando um campo chamado 'pdf'.
@@ -40,6 +40,9 @@ router.get('/servicos', servicoController.listar);
 router.post('/servicos', servicoController.criar);
 router.put('/servicos/:id', servicoController.atualizar);
 router.delete('/servicos/:id', servicoController.deletar);
+
+// Pagamento Pix (Mercado Pago)
+router.post('/pagamento/pix', pagamentoController.gerarPix);
 
 // Exportar TUDO no final (SÓ PODE TER UM DESSE)
 module.exports = router;
