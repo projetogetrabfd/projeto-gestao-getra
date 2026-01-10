@@ -10,6 +10,7 @@ import { RedefinirSenha } from './telaLogin/redefinirSenha/RedefinirSenha';
 import { Dashboard } from './telaDashboard/Dashboard';
 import { Clientes } from './telaClientes/Clientes';
 import { Faturas } from './telaFaturas/Faturas';
+import { Analise } from './telaAnalise/Analise';
 import { Servicos } from './telaServicos/Servicos';
 import { NotasFiscais } from './telaNotas/NotasFiscais';
 
@@ -27,6 +28,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clientes" element={<Clientes />} />
         <Route path="/faturas" element={<Faturas />} />
+        <Route path="/analise" element={<Analise />} />
         <Route path="/servicos" element={<Servicos />} />
         <Route path="/notas" element={<NotasFiscais />} />
 

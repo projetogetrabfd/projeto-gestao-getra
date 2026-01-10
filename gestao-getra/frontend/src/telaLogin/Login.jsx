@@ -34,33 +34,47 @@ export function Login() {
     }
   }
 
- return (
+  return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1>Gestão Getra</h1>
-        <h2>Login</h2>
-        <form onSubmit={handleLogin} className="form-group">
-          <input 
-            type="email" 
-            placeholder="E-mail Corporativo" 
-            value={email} 
-            onChange={e => setEmail(e.target.value)} 
-            required 
-          />
-          <input 
-            type="password" 
-            placeholder="Senha" 
-            value={senha} 
-            onChange={e => setSenha(e.target.value)} 
-            required 
-          />
+        <div className="auth-header">
+          <h1 className="auth-logo-text">
+            <span>G</span> GETRA
+          </h1>
+        </div>
+        
+        <form onSubmit={handleLogin}>
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">E-mail Corporativo</label>
+            <input 
+              id="email"
+              type="email" 
+              placeholder="seu.email@getra.com.br" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)} 
+              required 
+            />
+            
+            <label htmlFor="senha" className="form-label">Senha de Acesso</label>
+            <input 
+              id="senha"
+              type="password" 
+              placeholder="••••••••" 
+              value={senha} 
+              onChange={e => setSenha(e.target.value)} 
+              required 
+            />
+          </div>
+          
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Acessando...' : 'Acessar Sistema'}
+            {loading ? 'Autenticando...' : 'Acessar Painel'}
           </button>
         </form>
+        
         <div className="auth-links">
-          <p>Não tem acesso? <Link to="/cadastro">Solicitar Cadastro</Link></p>
-        </div>
+        <p>Esqueceu sua senha? <Link to="/redefinir">Recuperar acesso</Link></p>
+        <p style={{marginTop: '0.5rem'}}>Novo colaborador? <Link to="/cadastro">Solicitar conta</Link></p>
+      </div>
       </div>
     </div>
   );

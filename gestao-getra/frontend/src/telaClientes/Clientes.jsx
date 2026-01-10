@@ -34,11 +34,6 @@ export function Clientes() {
     carregarClientes();
   }, [navigate, usuario]);
 
-  function handleLogout() {
-    localStorage.removeItem('usuario');
-    navigate('/');
-  }
-
   // --- LIMPAR FORMULÁRIO ---
   function limparFormulario() {
     setNomeRazao('');
@@ -114,82 +109,100 @@ export function Clientes() {
   }
 
   return (
-    <div className="app-layout">
-      {/* 1. O Menu Lateral Fixo */}
+    <div className="app-container">
       <Sidebar />
-
-      {/* 2. A Área de Conteúdo (Direita) */}
-      <div className="content-area">
-        
-        {/* Um header simples branco só para dizer onde estamos */}
-        <header className="dashboard-header-simple">
-          <h2 style={{ fontSize: '1.5rem', color: 'var(--primary-dark)' }}>Gestão de Clientes</h2>
+      
+      <main className="main-content">
+        <header className="page-header">
+          <h2 className="page-title">Gestão de Clientes</h2>
           <button 
             className="btn-primary" 
-            style={{ width: 'auto', padding: '10px 20px' }}
+            style={{ width: 'auto' }}
             onClick={abrirModalCriacao}
           >
             + Novo Cliente
           </button>
         </header>
 
-        {/* O Conteúdo Principal (Lista) */}
-        <main className="dashboard-main">
-          
-          {clientes.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-              <p>Nenhum cliente encontrado.</p>
-            </div>
-          ) : (
-            <ul className="client-list">
-              {clientes.map(cliente => (
-                <li key={cliente.id} className="client-card">
-                  <div className="client-info">
-                    <strong>{cliente.nome_razao_social}</strong>
-                    <span>{cliente.email}</span>
-                    <span style={{fontSize: '0.8rem', color: '#999', display:'block'}}>
-                      {cliente.telefone} • {cliente.cpf_cnpj}
-                    </span>
-                  </div>
-                  
-                  <div className="actions-container">
-                    <button className="btn-edit" onClick={() => abrirModalEdicao(cliente)}>
-                      Editar
-                    </button>
-                    <button className="btn-delete" onClick={() => handleDeletar(cliente.id)}>
-                      Excluir
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </main>
-      </div>
+        {clientes.length === 0 ? (
+          <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+            <p>Nenhum cliente encontrado. Cadastre o primeiro!</p>
+          </div>
+        ) : (
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome / Razão Social</th>
+                  <th>CPF / CNPJ</th>
+                  <th>Contato</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clientes.map(cliente => (
+                  <tr key={cliente.id}>
+                    <td>
+                      <strong>{cliente.nome_razao_social}</strong>
+                      {cliente.endereco_completo && (
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                          {cliente.endereco_completo}
+                        </div>
+                      )}
+                    </td>
+                    <td>{cliente.cpf_cnpj}</td>
+                    <td>
+                      <div>{cliente.email}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{cliente.telefone}</div>
+                    </td>
+                    <td>
+                      <button className="btn-edit" onClick={() => abrirModalEdicao(cliente)}>
+                        Editar
+                      </button>
+                      <button className="btn-delete" onClick={() => handleDeletar(cliente.id)}>
+                        Excluir
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </main>
 
-      {/* MODAL (Pode ficar aqui no final, igual estava antes) */}
+      {/* MODAL */}
       {modalAberto && (
         <div className="modal-overlay">
-           {/* ... (o código do modal continua igual) ... */}
-           {/* ... Copie o conteúdo interno do modal antigo aqui ... */}
            <div className="modal-content">
             <div className="modal-header">
-              <h3>{idEmEdicao ? 'Editar Cliente' : 'Adicionar Cliente'}</h3>
+              <h3>{idEmEdicao ? 'Editar Cliente' : 'Novo Cliente'}</h3>
               <button className="btn-close" onClick={() => setModalAberto(false)}>×</button>
             </div>
             
             <form onSubmit={handleSalvarCliente}>
               <div className="form-group">
-                <input type="text" placeholder="Nome / Razão Social" value={nomeRazao} onChange={e => setNomeRazao(e.target.value)} required />
-                <input type="text" placeholder="CPF ou CNPJ" value={cpfCnpj} onChange={e => setCpfCnpj(e.target.value)} required />
-                <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
-                <input type="text" placeholder="Telefone" value={telefone} onChange={e => setTelefone(e.target.value)} />
-                <input type="text" placeholder="Endereço Completo" value={endereco} onChange={e => setEndereco(e.target.value)} />
+                <label className="form-label">Nome ou Razão Social</label>
+                <input type="text" value={nomeRazao} onChange={e => setNomeRazao(e.target.value)} required />
+                
+                <label className="form-label">CPF ou CNPJ</label>
+                <input type="text" value={cpfCnpj} onChange={e => setCpfCnpj(e.target.value)} required />
+                
+                <label className="form-label">Email</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+                
+                <label className="form-label">Telefone</label>
+                <input type="text" value={telefone} onChange={e => setTelefone(e.target.value)} />
+                
+                <label className="form-label">Endereço Completo</label>
+                <input type="text" value={endereco} onChange={e => setEndereco(e.target.value)} />
               </div>
 
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setModalAberto(false)}>Cancelar</button>
-                <button type="submit" className="btn-primary">{idEmEdicao ? 'Salvar Alterações' : 'Cadastrar Cliente'}</button>
+                <button type="submit" className="btn-primary" style={{ width: 'auto' }}>
+                  {idEmEdicao ? 'Salvar Alterações' : 'Cadastrar Cliente'}
+                </button>
               </div>
             </form>
           </div>

@@ -34,33 +34,45 @@ export function Cadastro() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Novo Usuário</h2>
-        <p style={{marginBottom: '20px', color: '#666'}}>Preencha os dados para acesso ao sistema.</p>
-        
-        <form onSubmit={handleCadastro} className="form-group">
-          <input 
-            type="text" 
-            placeholder="Nome Completo" 
-            value={nome} 
-            onChange={e => setNome(e.target.value)} 
-            required 
-          />
-          <input 
-            type="email" 
-            placeholder="E-mail Corporativo" 
-            value={email} 
-            onChange={e => setEmail(e.target.value)} 
-            required 
-          />
-          <input 
-            type="password" 
-            placeholder="Senha Forte" 
-            value={senha} 
-            onChange={e => setSenha(e.target.value)} 
-            required 
-          />
+        <div className="auth-header">
+          <h1 className="auth-logo-text">
+            <span>G</span> GETRA
+          </h1>
+          <p className="auth-subtitle">Solicitar Acesso ao Sistema</p>
+        </div>
+
+        <form onSubmit={handleCadastro}>
+          <div className="form-group">
+            <label className="form-label">Nome Completo</label>
+            <input 
+              type="text" 
+              placeholder="Ex: João Silva" 
+              value={nome} 
+              onChange={e => setNome(e.target.value)} 
+              required 
+            />
+            
+            <label className="form-label">E-mail Corporativo</label>
+            <input 
+              type="email" 
+              placeholder="seu.email@getra.com.br" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)} 
+              required 
+            />
+            
+            <label className="form-label">Definir Senha</label>
+            <input 
+              type="password" 
+              placeholder="••••••••" 
+              value={senha} 
+              onChange={e => setSenha(e.target.value)} 
+              required 
+            />
+          </div>
+
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Processando...' : 'Cadastrar Usuário'}
+            {loading ? 'Processando...' : 'Criar Conta'}
           </button>
         </form>
         

@@ -125,127 +125,100 @@ export function NotasFiscais() {
   };
 
   return (
-    <div className="app-layout">
+    <div className="app-container">
       <Sidebar />
-      <div className="content-area">
-        <header className="dashboard-header-simple">
-          <h2>Upload de Notas Fiscais (IA/OCR)</h2>
+      
+      <main className="main-content">
+        <header className="page-header">
+          <h2 className="page-title">Upload de Notas Fiscais (IA/OCR)</h2>
         </header>
 
-        <main className="dashboard-main">
+        {/* ÁREA DE UPLOAD */}
+        <div className="card" style={{ textAlign: 'center', border: '2px dashed var(--border-color)', background: 'var(--getra-gray-bg)' }}>
+          <h3 style={{ marginTop: 0, color: 'var(--text-primary)' }}>1. Selecione a Nota Fiscal (PDF)</h3>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>O sistema irá ler o conteúdo automaticamente.</p>
           
-          {/* ÁREA DE UPLOAD */}
-          <div style={styles.uploadBox}>
-            <h3 style={{marginTop: 0, color: '#475569'}}>1. Selecione a Nota Fiscal (PDF)</h3>
-            <p style={{fontSize: '0.9rem', color: '#64748b'}}>O sistema irá ler o conteúdo automaticamente.</p>
-            
-            <div style={{display: 'flex', gap: '10px', alignItems: 'center', marginTop: '15px'}}>
-              <input type="file" accept=".pdf" onChange={handleFileChange} />
-              <button 
-                className="btn-primary" 
-                onClick={handleLerArquivo}
-                disabled={loading || !arquivo}
-              >
-                {loading ? 'Lendo Arquivo...' : 'Fazer Upload e Ler'}
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'center', marginTop: '1.5rem' }}>
+            <input type="file" accept=".pdf" onChange={handleFileChange} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--white)' }} />
+            <button 
+              className="btn-primary" 
+              style={{ width: 'auto' }}
+              onClick={handleLerArquivo}
+              disabled={loading || !arquivo}
+            >
+              {loading ? 'Lendo Arquivo...' : 'Fazer Upload e Ler'}
+            </button>
+          </div>
+        </div>
+
+        {/* FORMULÁRIO COM DADOS LIDOS */}
+        <div className="card">
+          <h3 style={{ marginTop: 0, color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+            2. Conferência de Dados
+          </h3>
+          
+          <form onSubmit={handleSalvar}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+              
+              <div className="form-group">
+                <label className="form-label">Número da Nota</label>
+                <input 
+                  type="text" 
+                  value={dados.numero} 
+                  onChange={e => setDados({...dados, numero: e.target.value})}
+                  placeholder="Ex: 123456"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">CNPJ Emitente</label>
+                <input 
+                  type="text" 
+                  value={dados.cnpj} 
+                  onChange={e => setDados({...dados, cnpj: e.target.value})}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Data de Emissão</label>
+                <input 
+                  type="date" 
+                  value={dados.data_emissao} 
+                  onChange={e => setDados({...dados, data_emissao: e.target.value})}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Valor Total (R$)</label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  value={dados.valor} 
+                  onChange={e => setDados({...dados, valor: e.target.value})}
+                  style={{ fontWeight: '600', color: 'var(--getra-green-dark)' }} 
+                />
+              </div>
+
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label className="form-label">Resumo / Observações</label>
+                <input 
+                  type="text" 
+                  value={dados.resumo} 
+                  onChange={e => setDados({...dados, resumo: e.target.value})}
+                />
+              </div>
+
+            </div>
+
+            <div style={{ marginTop: '2rem', textAlign: 'right' }}>
+              <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '0.75rem 2rem' }}>
+                Confirmar e Salvar Nota
               </button>
             </div>
-          </div>
+          </form>
+        </div>
 
-          {/* FORMULÁRIO COM DADOS LIDOS */}
-          <div style={{marginTop: '30px', background: 'white', padding: '25px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)'}}>
-            <h3 style={{marginTop: 0, color: '#1e293b', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px'}}>2. Conferência de Dados</h3>
-            
-            <form onSubmit={handleSalvar}>
-              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px'}}>
-                
-                <div>
-                  <label style={styles.label}>Número da Nota</label>
-                  <input 
-                    type="text" 
-                    value={dados.numero} 
-                    onChange={e => setDados({...dados, numero: e.target.value})}
-                    style={styles.input} 
-                    placeholder="Ex: 123456"
-                  />
-                </div>
-
-                <div>
-                  <label style={styles.label}>CNPJ Emitente</label>
-                  <input 
-                    type="text" 
-                    value={dados.cnpj} 
-                    onChange={e => setDados({...dados, cnpj: e.target.value})}
-                    style={styles.input} 
-                  />
-                </div>
-
-                <div>
-                  <label style={styles.label}>Data de Emissão</label>
-                  <input 
-                    type="date" 
-                    value={dados.data_emissao} 
-                    onChange={e => setDados({...dados, data_emissao: e.target.value})}
-                    style={styles.input} 
-                  />
-                </div>
-
-                <div>
-                  <label style={styles.label}>Valor Total (R$)</label>
-                  <input 
-                    type="number" 
-                    step="0.01" 
-                    value={dados.valor} 
-                    onChange={e => setDados({...dados, valor: e.target.value})}
-                    style={{...styles.input, fontWeight: 'bold', color: '#166534'}} 
-                  />
-                </div>
-
-                <div style={{gridColumn: '1 / -1'}}>
-                  <label style={styles.label}>Resumo / Observações</label>
-                  <input 
-                    type="text" 
-                    value={dados.resumo} 
-                    onChange={e => setDados({...dados, resumo: e.target.value})}
-                    style={styles.input} 
-                  />
-                </div>
-
-              </div>
-
-              <div style={{marginTop: '20px', textAlign: 'right'}}>
-                <button type="submit" className="btn-primary" style={{padding: '12px 30px'}}>
-                  Confirmar e Salvar Nota
-                </button>
-              </div>
-            </form>
-          </div>
-
-        </main>
-      </div>
+      </main>
     </div>
   );
 }
-
-const styles = {
-  uploadBox: {
-    border: '2px dashed #cbd5e1',
-    borderRadius: '10px',
-    padding: '30px',
-    textAlign: 'center',
-    background: '#f8fafc'
-  },
-  label: {
-    display: 'block',
-    marginBottom: '5px',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-    color: '#475569'
-  },
-  input: {
-    width: '100%',
-    padding: '10px',
-    borderRadius: '6px',
-    border: '1px solid #cbd5e1',
-    fontSize: '1rem'
-  }
-};
