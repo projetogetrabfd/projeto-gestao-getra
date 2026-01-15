@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import './redefinir.css';
+import { useNavigate, Link } from 'react-router-dom';
 
-const RedefinirSenha = ({ onNavigate }) => {
+const RedefinirSenha = () => {
     const [email, setEmail] = useState('');
     const [mensagem, setMensagem] = useState({ texto: '', tipo: '' });
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -17,6 +18,7 @@ const RedefinirSenha = ({ onNavigate }) => {
 
         setLoading(true);
 
+        // Simulação de envio
         setTimeout(() => {
             setMensagem({ 
                 texto: 'Se o e-mail informado estiver cadastrado, você receberá instruções para redefinir sua senha.', 
@@ -25,51 +27,61 @@ const RedefinirSenha = ({ onNavigate }) => {
             setLoading(false);
 
             setTimeout(() => {
-                onNavigate('login');
+                navigate('/');
             }, 3000);
         }, 1500);
     };
 
     return (
-        <div className="redefinir-container">
-            <div className="redefinir-header">
-                <h2>Redefinir Senha</h2>
-                <p>Informe o e-mail associado à sua conta para receber as instruções de recuperação.</p>
+        <div className="auth-container">
+            <div className="auth-card">
+                <div className="auth-header">
+                    <h1 className="auth-logo-text">
+                        <span>G</span> GETRA
+                    </h1>
+                    <p className="auth-subtitle">Recuperação de Acesso</p>
+                </div>
+
+                <div className="auth-description" style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+                    <p>Informe o e-mail associado à sua conta para receber as instruções.</p>
+                </div>
+
+                {mensagem.texto && (
+                    <div style={{ 
+                        padding: '1rem', 
+                        marginBottom: '1rem', 
+                        borderRadius: '8px', 
+                        fontSize: '0.9rem',
+                        backgroundColor: mensagem.tipo === 'error' ? '#FEF2F2' : '#F0FDF4',
+                        color: mensagem.tipo === 'error' ? '#DC2626' : '#166534',
+                        border: `1px solid ${mensagem.tipo === 'error' ? '#FECACA' : '#BBF7D0'}`
+                    }}>
+                        {mensagem.texto}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="email">E-mail Corporativo</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            placeholder="seu.email@getra.com.br" 
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" className="btn-primary" disabled={loading}>
+                        {loading ? 'Enviando...' : 'Enviar Instruções'}
+                    </button>
+                </form>
+
+                <div className="auth-links">
+                    <p>Lembrou a senha? <Link to="/">Voltar ao Login</Link></p>
+                </div>
             </div>
-
-            {mensagem.texto && (
-                <div className={`message-container ${mensagem.tipo}`} style={{ display: 'block' }}>
-                    {mensagem.texto}
-                </div>
-            )}
-
-            <form id="redefinir-form" onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label htmlFor="email">E-mail</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        placeholder="seu@email.com" 
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                </div>
-
-                <button type="submit" className="btn-primary" disabled={loading}>
-                    {loading ? 'Enviando...' : 'Enviar instruções'}
-                </button>
-
-                <button 
-                    type="button" 
-                    className="back-to-login link-button"
-                    onClick={() => onNavigate('login')}
-                    style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', textDecoration: 'none', cursor: 'pointer', display: 'block', width: '100%', marginTop: '20px' }}
-                >
-                    &larr; Voltar para o Login
-                </button>
-            </form>
         </div>
     );
 };

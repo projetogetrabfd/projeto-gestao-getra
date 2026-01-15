@@ -2,21 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Sidebar } from '../Components/Sidebar';
 
-// Componentes Gráficos
-import { Card } from './components/Card';
-import { LineChart } from './components/LineChart';
-import { BarChart } from './components/BarChart';
-import { DoughnutChart } from './components/DoughnutChart';
-
-import {
-  Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, 
-  BarElement, ArcElement, Title, Tooltip, Legend,
-} from 'chart.js';
-
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend);
-
 export function Faturas() {
-  const [data, setData] = useState(null);
   const [listaFaturas, setListaFaturas] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,69 +11,30 @@ export function Faturas() {
   
   // Listas para os Selects
   const [listaClientes, setListaClientes] = useState([]);
-  const [listaServicos, setListaServicos] = useState([]); // <--- NOVA LISTA
+  const [listaServicos, setListaServicos] = useState([]);
   
   // Campos do Formulário
   const [clienteSelecionado, setClienteSelecionado] = useState('');
-  const [servicoSelecionado, setServicoSelecionado] = useState(''); // <--- NOVO CAMPO
+  const [servicoSelecionado, setServicoSelecionado] = useState('');
   const [valor, setValor] = useState('');
   const [dataVencimento, setDataVencimento] = useState('');
   const [status, setStatus] = useState('PENDENTE');
-
-  // --- Processamento dos Gráficos ---
-  function processarDadosReais(faturasDoBanco) {
-    const faturamentoMensal = Array(12).fill(0);
-    const qtdPorStatus = { PENDENTE: 0, PAGA: 0, VENCIDA: 0 };
-
-    faturasDoBanco.forEach(fatura => {
-      const valor = parseFloat(fatura.valor_total);
-      const data = new Date(fatura.data_vencimento);
-      
-      if (!isNaN(data.getTime())) {
-        const mes = data.getUTCMonth(); 
-        faturamentoMensal[mes] += valor;
-      }
-      if (qtdPorStatus[fatura.status] !== undefined) {
-        qtdPorStatus[fatura.status] += valor;
-      }
-    });
-
-    return {
-      historicoAnual: {
-        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
-        faturamento: faturamentoMensal,
-        despesas: Array(12).fill(0)
-      },
-      resumoMensal: {
-        labels: ['Pendente', 'Recebido', 'Vencido'],
-        valores: [qtdPorStatus.PENDENTE, qtdPorStatus.PAGA, qtdPorStatus.VENCIDA]
-      },
-      distribuicaoCategorias: {
-        labels: ['Pendente', 'Pago', 'Vencido'],
-        valores: [qtdPorStatus.PENDENTE, qtdPorStatus.PAGA, qtdPorStatus.VENCIDA]
-      }
-    };
-  }
 
   // --- Carregar Dados ---
   const carregarTudo = async () => {
     try {
       setLoading(true);
       
-      // Busca Clientes, Faturas e SERVIÇOS simultaneamente
       const [resClientes, resFaturas, resServicos] = await Promise.all([
         axios.get('http://localhost:3000/clientes'),
         axios.get('http://localhost:3000/faturas'),
-        axios.get('http://localhost:3000/servicos') // <--- Busca Serviços
+        axios.get('http://localhost:3000/servicos')
       ]);
 
       setListaClientes(resClientes.data);
       setListaServicos(resServicos.data);
       setListaFaturas(resFaturas.data);
       
-      const dadosProcessados = processarDadosReais(resFaturas.data);
-      setData(dadosProcessados);
-
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     } finally {
@@ -102,13 +49,12 @@ export function Faturas() {
     const idServico = e.target.value;
     setServicoSelecionado(idServico);
 
-    // Procura o serviço na lista para pegar o preço
     const servicoEncontrado = listaServicos.find(s => s.id === Number(idServico));
     
     if (servicoEncontrado) {
-      setValor(servicoEncontrado.valor_padrao); // Preenche o campo valor sozinho!
+      setValor(servicoEncontrado.valor_padrao);
     } else {
-      setValor(''); // Se desmarcar, limpa (opcional)
+      setValor('');
     }
   }
 
@@ -124,7 +70,6 @@ export function Faturas() {
       });
       alert("Fatura lançada!");
       setModalAberto(false);
-      // Limpar formulário
       setValor(''); setDataVencimento(''); setStatus('PENDENTE'); 
       setClienteSelecionado(''); setServicoSelecionado('');
       
@@ -158,81 +103,72 @@ export function Faturas() {
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
 
   return (
-    <div className="app-layout">
+    <div className="app-container">
       <Sidebar />
-      <div className="content-area">
-        <header className="dashboard-header-simple">
-          <h2>Gestão Financeira</h2>
-          <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px' }} onClick={() => setModalAberto(true)}>
+      <main className="main-content">
+        <header className="page-header">
+          <h2 className="page-title">Lançamento de Faturas</h2>
+          <button className="btn-primary" style={{ width: 'auto' }} onClick={() => setModalAberto(true)}>
             + Nova Fatura
           </button>
         </header>
 
-        <main className="dashboard-main">
-          {loading || !data ? (
-            <p>Carregando...</p>
-          ) : (
-            <>
-              {/* ÁREA DE GRÁFICOS */}
-              <div className="charts-grid">
-                <Card title="Situação (Valores)"><BarChart data={data.resumoMensal} /></Card>
-                <Card title="Distribuição"><DoughnutChart data={data.distribuicaoCategorias} /></Card>
-                <Card title="Anual" className="card-full-width"><LineChart data={data.historicoAnual} /></Card>
-              </div>
-
-              {/* ÁREA DA TABELA */}
-              <h3 className="section-title" style={{ marginTop: '40px' }}>Histórico de Lançamentos</h3>
-              
-              {listaFaturas.length === 0 ? <p>Nenhuma fatura registrada.</p> : (
-                <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                      <tr>
-                        <th style={{ padding: '15px', textAlign: 'left', color: '#64748b' }}>Cliente</th>
-                        <th style={{ padding: '15px', textAlign: 'left', color: '#64748b' }}>Vencimento</th>
-                        <th style={{ padding: '15px', textAlign: 'left', color: '#64748b' }}>Valor</th>
-                        <th style={{ padding: '15px', textAlign: 'center', color: '#64748b' }}>Status</th>
-                        <th style={{ padding: '15px', textAlign: 'right', color: '#64748b' }}>Ações</th>
+        {loading ? (
+          <p>Carregando faturas...</p>
+        ) : (
+          <>
+            {/* ÁREA DA TABELA (Sem gráficos agora) */}
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>Histórico de Lançamentos</h3>
+            
+            {listaFaturas.length === 0 ? <p>Nenhuma fatura registrada.</p> : (
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Cliente</th>
+                      <th>Vencimento</th>
+                      <th>Valor</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: 'right' }}>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {listaFaturas.map(fatura => (
+                      <tr key={fatura.id}>
+                        <td>
+                          <strong>{fatura.cliente?.nome_razao_social || 'Desconhecido'}</strong>
+                        </td>
+                        <td>{formatDate(fatura.data_vencimento)}</td>
+                        <td style={{ fontWeight: '600' }}>{formatMoney(fatura.valor_total)}</td>
+                        <td>
+                          <span className={`badge ${
+                            fatura.status === 'PAGA' ? 'badge-success' : 
+                            fatura.status === 'VENCIDA' ? 'badge-danger' : 'badge-warning'
+                          }`}>
+                            {fatura.status}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button className="btn-delete" onClick={() => handleDeletar(fatura.id)} style={{ marginRight: '0.5rem' }}>Excluir</button>
+                          {fatura.status !== 'PAGA' && (
+                            <button 
+                              className="btn-primary"
+                              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', width: 'auto', display: 'inline-block' }}
+                              onClick={() => mudarStatus(fatura.id, 'PAGA')}
+                            >
+                              ✓ Pagar
+                            </button>
+                          )}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {listaFaturas.map(fatura => (
-                        <tr key={fatura.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '15px' }}>
-                            <strong>{fatura.cliente?.nome_razao_social || 'Desconhecido'}</strong>
-                          </td>
-                          <td style={{ padding: '15px' }}>{formatDate(fatura.data_vencimento)}</td>
-                          <td style={{ padding: '15px', fontWeight: 'bold' }}>{formatMoney(fatura.valor_total)}</td>
-                          <td style={{ padding: '15px', textAlign: 'center' }}>
-                            <span style={{
-                              padding: '5px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold',
-                              background: fatura.status === 'PAGA' ? '#dcfce7' : fatura.status === 'VENCIDA' ? '#fee2e2' : '#fef9c3',
-                              color: fatura.status === 'PAGA' ? '#166534' : fatura.status === 'VENCIDA' ? '#991b1b' : '#854d0e'
-                            }}>
-                              {fatura.status}
-                            </span>
-                          </td>
-                          <td style={{ padding: '15px', textAlign: 'right' }}>
-                            <button className="btn-delete" onClick={() => handleDeletar(fatura.id)} style={{ marginRight: '10px' }}>Excluir</button>
-                            {fatura.status !== 'PAGA' && (
-                              <button 
-                                style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}
-                                onClick={() => mudarStatus(fatura.id, 'PAGA')}
-                              >
-                                ✓ Pagar
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </>
-          )}
-        </main>
-      </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+      </main>
 
       {/* --- MODAL --- */}
       {modalAberto && (
@@ -244,16 +180,16 @@ export function Faturas() {
             </div>
             <form onSubmit={handleSalvarFatura}>
               <div className="form-group">
-                <label>Cliente</label>
-                <select style={{ padding: '10px' }} value={clienteSelecionado} onChange={e => setClienteSelecionado(e.target.value)} required>
+                <label className="form-label">Cliente</label>
+                <select className="form-control" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)' }} value={clienteSelecionado} onChange={e => setClienteSelecionado(e.target.value)} required>
                   <option value="">Selecione...</option>
                   {listaClientes.map(c => <option key={c.id} value={c.id}>{c.nome_razao_social}</option>)}
                 </select>
 
                 {/* NOVO CAMPO DE SERVIÇO */}
-                <div style={{ margin: '10px 0', borderTop: '1px solid #eee', paddingTop: '10px' }}>
-                  <label style={{ color: '#2563eb' }}>Preencher valor com Serviço (Opcional):</label>
-                  <select style={{ padding: '10px' }} value={servicoSelecionado} onChange={handleServicoChange}>
+                <div style={{ margin: '1rem 0', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                  <label className="form-label" style={{ color: 'var(--getra-green-dark)' }}>Preencher com Serviço (Opcional):</label>
+                  <select className="form-control" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)' }} value={servicoSelecionado} onChange={handleServicoChange}>
                     <option value="">Selecione para preencher valor...</option>
                     {listaServicos.map(s => (
                       <option key={s.id} value={s.id}>
@@ -263,14 +199,14 @@ export function Faturas() {
                   </select>
                 </div>
 
-                <label>Valor Total (R$)</label>
+                <label className="form-label">Valor Total (R$)</label>
                 <input type="number" step="0.01" value={valor} onChange={e => setValor(e.target.value)} required />
                 
-                <label>Vencimento</label>
+                <label className="form-label">Vencimento</label>
                 <input type="date" value={dataVencimento} onChange={e => setDataVencimento(e.target.value)} required />
                 
-                <label>Status</label>
-                <select style={{ padding: '10px' }} value={status} onChange={e => setStatus(e.target.value)}>
+                <label className="form-label">Status</label>
+                <select className="form-control" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)' }} value={status} onChange={e => setStatus(e.target.value)}>
                   <option value="PENDENTE">Pendente</option>
                   <option value="PAGA">Paga</option>
                   <option value="VENCIDA">Vencida</option>
@@ -278,7 +214,7 @@ export function Faturas() {
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setModalAberto(false)}>Cancelar</button>
-                <button type="submit" className="btn-primary">Salvar</button>
+                <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Salvar</button>
               </div>
             </form>
           </div>
