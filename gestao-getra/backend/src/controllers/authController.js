@@ -1,63 +1,38 @@
-// ARQUIVO: backend/src/controllers/authController.js
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const ROLES = require('../config/roles');
+
+// Simulação de Banco de Dados com um usuário para cada permissão
+const USUARIOS_DEMO = [
+  { id: 1, nome: "Admin Getra", email: "admin@getra.com.br", senha: "123", role: ROLES.ADMIN },
+  { id: 2, nome: "Financeiro Getra", email: "financeiro@getra.com.br", senha: "123", role: ROLES.FINANCEIRO },
+  { id: 3, nome: "Cliente Getra", email: "cliente@getra.com.br", senha: "123", role: ROLES.CLIENTE }
+];
 
 exports.register = async (req, res) => {
-  try {
-    const { nome, email, senha } = req.body;
-
-    // Verificação de segurança: Se não tiver senha, para aqui
-    if (!senha) return res.status(400).json({ error: "Senha é obrigatória" });
-
-    const user = await prisma.usuario.create({
-      data: {
-        nome,
-        email,
-        senha_hash: senha, // Salva a senha no campo correto
-        ativo: true,       // Usuário nasce ativo
-        perfil: {
-          connect: { id: 1 } // <--- FORMA CORRETA DE VINCULAR O PERFIL 1
-        }
-      }
-    });
-
-    res.json({ message: "Usuário criado com sucesso!", user });
-    
-  } catch (error) {
-    console.log("ERRO NO CADASTRO:", error);
-    // Se o erro for de email duplicado (P2002)
-    if (error.code === 'P2002') {
-      return res.status(400).json({ error: "Este email já está cadastrado." });
-    }
-    res.status(500).json({ error: "Erro interno ao cadastrar." });
-  }
+  // Desativado para a demonstração, pois não há banco para salvar novos dados
+  res.status(501).json({ error: "Funcionalidade de registro desativada para a demonstração." });
 };
 
 exports.login = async (req, res) => {
   try {
     const { email, senha } = req.body;
 
-    // 1. Busca o usuário pelo email
-    const user = await prisma.usuario.findUnique({
-      where: { email }
-    });
+    // Busca o usuário na lista manual em vez de usar o Prisma
+    const user = USUARIOS_DEMO.find(u => u.email === email && u.senha === senha);
 
-    // 2. Se não achar o usuário OU a senha não bater (comparando com senha_hash)
-    if (!user || user.senha_hash !== senha) {
+    if (!user) {
       return res.status(401).json({ error: "Email ou senha incorretos" });
     }
 
-    // 3. Verifica se está ativo
-    if (!user.ativo) {
-      return res.status(401).json({ error: "Usuário inativo." });
-    }
-
-    // 4. Sucesso! Retorna os dados (removendo a senha por segurança)
-    const { senha_hash, ...userSemSenha } = user;
-    
-    res.json({ 
+    // Retorna os dados que o seu componente React espera salvar no localStorage
+    // Incluímos a 'role' para que o sistema de permissões saiba quem logou
+    return res.json({ 
       message: "Login realizado com sucesso", 
-      user: userSemSenha 
+      user: {
+        id: user.id,
+        nome: user.nome,
+        email: user.email,
+        role: user.role
+      } 
     });
 
   } catch (error) {
