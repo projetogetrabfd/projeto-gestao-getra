@@ -54,3 +54,8 @@ gestao-getra/backend/src/middlewares/mockAuth.js
 ### Para a proxima versão do sistema de permissões
 Autenticação real com JWT
 Integração com banco de dados
+
+### Usuarios
+admin@getra.com.br Senha: 123
+financeiro@getra.com.br Senha: 123
+cliente@getra.com.br Senha: 123
