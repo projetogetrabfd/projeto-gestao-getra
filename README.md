@@ -38,7 +38,7 @@ As permissões controlam **o que o usuário pode visualizar e acessar**, princip
 
 ## Autenticação Simulada (Mock)
 
-Como o projeto ainda **não possui JWT**, foi criado um middleware de autenticação simulada para permitir usar o sistema inicialmente completos do sistema.
+Como o projeto ainda **não possui banco de dados nem JWT**, foi criado um middleware de autenticação simulada para permitir usar o sistema inicialmente completos do sistema.
 
 Arquivo:
 
@@ -54,3 +54,8 @@ gestao-getra/backend/src/middlewares/mockAuth.js
 ### Para a proxima versão do sistema de permissões
 Autenticação real com JWT
 Integração com banco de dados
+
+### Usuarios
+admin@getra.com.br Senha: 123
+financeiro@getra.com.br Senha: 123
+cliente@getra.com.br Senha: 123
