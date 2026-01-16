@@ -24,7 +24,7 @@ exports.login = async (req, res) => {
     }
 
     // Retorna os dados que o seu componente React espera salvar no localStorage
-    // Incluímos a 'role' para que o sistema de permissões saiba quem logou
+    // Incluí a 'role' para que o sistema de permissões saiba quem logou
     return res.json({ 
       message: "Login realizado com sucesso", 
       user: {
