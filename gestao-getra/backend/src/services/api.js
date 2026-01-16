@@ -10,7 +10,7 @@ api.interceptors.request.use((config) => {
   
   if (data) {
     const usuario = JSON.parse(data);
-    // Aqui pegamos o que você salvou no login e mandamos para o backend
+    // Aqui é pego oque é salvo no login e mandamos para o backend
     config.headers['x-user-role'] = usuario.role;
     config.headers['x-user-id'] = usuario.id;
   }
