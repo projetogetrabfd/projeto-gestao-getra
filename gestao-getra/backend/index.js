@@ -1,7 +1,7 @@
-
+// ARQUIVO: backend/index.js
 const express = require('express');
 const cors = require('cors'); // 1. Importar o CORS
-const routes = require('./src/routes');
+const routes = require('./src/routes'); // Suas rotas
 
 const app = express();
 app.use(cors()); 
