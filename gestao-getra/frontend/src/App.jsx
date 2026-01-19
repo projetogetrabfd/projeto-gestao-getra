@@ -15,6 +15,9 @@ import { Servicos } from './telaServicos/Servicos';
 import { NotasFiscais } from './telaNotas/NotasFiscais';
 import { Pagamento } from './pagamento/Pagamento';
 
+// Componentes de Proteção
+import { ProtectedRoute } from './Components/ProtectedRoute';
+
 function App() {
   return (
     <div className="app-container">
@@ -25,14 +28,42 @@ function App() {
         <Route path="/cadastro" element={<Cadastro />} />
         <Route path="/redefinir" element={<RedefinirSenha />} />
 
-        {/* Rotas Privadas (Do Menu Lateral) */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/clientes" element={<Clientes />} />
-        <Route path="/faturas" element={<Faturas />} />
-        <Route path="/analise" element={<Analise />} />
-        <Route path="/servicos" element={<Servicos />} />
-        <Route path="/notas" element={<NotasFiscais />} />
-        <Route path="/pagamento" element={<Pagamento />} />
+        {/* Rotas Privadas Do Menu Lateral */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/clientes" element={
+          <ProtectedRoute requiredRole="FINANCEIRO">
+            <Clientes />
+          </ProtectedRoute>
+        } />
+        <Route path="/faturas" element={
+          <ProtectedRoute requiredRole="FINANCEIRO">
+            <Faturas />
+          </ProtectedRoute>
+        } />
+        <Route path="/analise" element={
+          <ProtectedRoute requiredRole="FINANCEIRO">
+            <Analise />
+          </ProtectedRoute>
+        } />
+        <Route path="/servicos" element={
+          <ProtectedRoute requiredRole="FINANCEIRO">
+            <Servicos />
+          </ProtectedRoute>
+        } />
+        <Route path="/notas" element={
+          <ProtectedRoute>
+            <NotasFiscais />
+          </ProtectedRoute>
+        } />
+        <Route path="/pagamento" element={
+          <ProtectedRoute>
+            <Pagamento />
+          </ProtectedRoute>
+        } />
 
         {/* Qualquer outra coisa volta pro login */}
         <Route path="*" element={<Navigate to="/" />} />

@@ -6,7 +6,6 @@ export function Login() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
 
   async function handleLogin(event) {
@@ -14,26 +13,22 @@ export function Login() {
     setLoading(true);
 
     try {
+      // Chama o backend para verificar a senha
       const response = await axios.post('http://localhost:3000/auth/login', {
         email,
         senha
       });
 
-      // Salva o usuário retornado pelo backend
-      localStorage.setItem(
-        'usuario',
-        JSON.stringify(response.data.user)
-      );
+      // SUCESSO! O backend devolveu os dados do usuário.
+      // Vamos salvar no navegador para não perder o login ao atualizar a página.
+      localStorage.setItem('usuario', JSON.stringify(response.data.user));
 
-      // Redireciona após login
-      navigate('/dashboard');
-
+      // Redireciona para a tela principal
+      navigate('/dashboard'); 
+      
     } catch (error) {
       console.error(error);
-      alert(
-        'Falha no login: ' +
-        (error.response?.data?.error || 'Email ou senha incorretos')
-      );
+      alert("Falha no login: " + (error.response?.data?.error || "Email ou senha incorretos"));
     } finally {
       setLoading(false);
     }
@@ -47,53 +42,39 @@ export function Login() {
             <span>G</span> GETRA
           </h1>
         </div>
-
+        
         <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label htmlFor="email" className="form-label">
-              E-mail Corporativo
-            </label>
-            <input
+            <label htmlFor="email" className="form-label">E-mail Corporativo</label>
+            <input 
               id="email"
-              type="email"
-              placeholder="seu.email@getra.com.br"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              type="email" 
+              placeholder="seu.email@getra.com.br" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)} 
+              required 
             />
-
-            <label htmlFor="senha" className="form-label">
-              Senha de Acesso
-            </label>
-            <input
+            
+            <label htmlFor="senha" className="form-label">Senha de Acesso</label>
+            <input 
               id="senha"
-              type="password"
-              placeholder="••••••••"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              required
+              type="password" 
+              placeholder="••••••••" 
+              value={senha} 
+              onChange={e => setSenha(e.target.value)} 
+              required 
             />
           </div>
-
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={loading}
-          >
+          
+          <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? 'Autenticando...' : 'Acessar Painel'}
           </button>
         </form>
-
+        
         <div className="auth-links">
-          <p>
-            Esqueceu sua senha?{' '}
-            <Link to="/redefinir">Recuperar acesso</Link>
-          </p>
-          <p style={{ marginTop: '0.5rem' }}>
-            Novo colaborador?{' '}
-            <Link to="/cadastro">Solicitar conta</Link>
-          </p>
-        </div>
+        <p>Esqueceu sua senha? <Link to="/redefinir">Recuperar acesso</Link></p>
+        <p style={{marginTop: '0.5rem'}}>Novo colaborador? <Link to="/cadastro">Solicitar conta</Link></p>
+      </div>
       </div>
     </div>
   );
