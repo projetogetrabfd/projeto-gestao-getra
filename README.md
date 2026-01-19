@@ -1,61 +1,80 @@
-## Novidades da Versão
+# Sistema de Permissões - GETRA
 
-Foi implementada a **estrutura inicial de controle de acesso (permissões)**, permitindo que o sistema se comporte de forma diferente conforme o tipo de usuário logado.
+## Roles Definidos
 
-O objetivo é garantir **organização, segurança e escalabilidade**, mesmo antes da integração com banco de dados e autenticação real.
+### CLIENTE (Usuário Padrão)
+- **Acesso via:** Página do Cliente
+- **Permissões:**
+  - Dashboard
+  - Lançamentos (Upload de Notas Fiscais)
+  - Financeiro (Pagamentos)
 
----
+### FINANCEIRO
+- **Permissões:** Todas as telas exceto alteração de roles
+-  Dashboard, Clientes, Faturas, Análise, Serviços, Upload NF, Pagamento
 
-## Sistema de Permissões (Roles)
+### ADMIN_MASTER (Diretoria)
+- **Permissões:** Acesso total a todas as funcionalidades
+-  Todas as telas + alteração de roles de usuários
 
-O sistema trabalha com três níveis de acesso:
+## Arquivos Criados
 
-- **ADMIN (Diretoria)**
-- **FINANCEIRO**
-- **CLIENTE**
+### Backend
+- **`src/middleware/authMiddleware.js`**  Middleware de autenticação e verificação de permissões
+- **`prisma.config.js`**  Configuração do Prisma para conexão com banco
 
-As permissões controlam **o que o usuário pode visualizar e acessar**, principalmente no menu lateral (sidebar).
+### Frontend
+- **`src/hooks/useAuth.js`** - Hook customizado para gerenciar autenticação e permissões
+- **`src/Components/ProtectedRoute.jsx`** - Componente para proteger rotas baseado em roles
 
-### Visibilidade por perfil
+## Arquivos Modificados
 
-**ADMIN**
-- Dashboard
-- Análise
-- Serviços
+### Backend
+- **`prisma/schema.prisma`**
+  - Adicionado enum `Role` com valores: CLIENTE, FINANCEIRO, ADMIN_MASTER
+  - Adicionado campo `role` na tabela `Usuario` com valor padrão `CLIENTE`
 
-**FINANCEIRO**
-- Dashboard
-- Clientes
-- Faturas
+- **`src/controllers/authController.js`**
+  - Login agora retorna `token` e `user` com informações completas incluindo `role`
+  - Token temporário usando ID do usuário (produção deve usar JWT)
 
-**CLIENTE**
-- Dashboard
-- Upload de Nota Fiscal
-- Pagamentos
- Itens sem permissão **não aparecem na interface**.
+- **`src/controllers/usuarioController.js`**
+  - Implementada validação: apenas `ADMIN_MASTER` pode alterar roles
+  - Novo método `alterarRole()` para mudança segura de papéis
 
----
+### Frontend
+- **`src/Components/Sidebar.jsx`**
+  - Sidebar inteligente que oculta itens conforme permissão do usuário
+  - Exibe role do usuário para identificação visual
+  - Usa hook `useAuth()` para verificar permissões dinamicamente
 
-## Autenticação Simulada (Mock)
+- **`src/App.jsx`**
+  - Todas as rotas privadas protegidas com `ProtectedRoute`
+  - Validação de role específica por tela
+  - Redirecionamento automático para usuários não autorizados
 
-Como o projeto ainda **não possui banco de dados nem JWT**, foi criado um middleware de autenticação simulada para permitir usar o sistema inicialmente completos do sistema.
+- **`src/telaLogin/Login.jsx`**
+  - Corrigido redirecionamento para `/dashboard` após login
+  - Salva dados completos do usuário no localStorage
 
-Arquivo:
+## Como Usar
 
-Esse middleware:
-- Injeta manualmente `id`, `nome` e `role`
+### 1. Iniciar Servidores
+```bash
+# Backend
+cd gestao-getra/backend
+npm run dev
 
-### Testar diferentes permissões
+# Frontend  
+cd gestao-getra/frontend
+npm run dev
 
-Para alterar a permissão do usuário, modifique **apenas este arquivo**:
+# Prisma Studio (visualizar banco)
+npx prisma studio
+```
 
-gestao-getra/backend/src/middlewares/mockAuth.js
-
-### Para a proxima versão do sistema de permissões
-Autenticação real com JWT
-Integração com banco de dados
-
-### Usuarios
-admin@getra.com.br Senha: 123
-financeiro@getra.com.br Senha: 123
-cliente@getra.com.br Senha: 123
+### 2. Testar Permissões
+- Faça login com diferentes usuários:
+  - `adm@getra` → Acesso total
+  - `financeiro@getra` → Acesso financeiro completo
+  - `cliente@getra` → Acesso básico
