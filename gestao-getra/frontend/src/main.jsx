@@ -3,12 +3,11 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 
-// 1. IMPORTANTE: Importar o BrowserRouter
+//Importar o BrowserRouter
 import { BrowserRouter } from 'react-router-dom'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* 2. IMPORTANTE: Envolver o App */}
     <BrowserRouter>
       <App />
     </BrowserRouter>

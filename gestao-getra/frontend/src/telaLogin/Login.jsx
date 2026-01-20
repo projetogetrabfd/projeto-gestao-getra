@@ -24,7 +24,7 @@ export function Login() {
       localStorage.setItem('usuario', JSON.stringify(response.data.user));
 
       // Redireciona para a tela principal
-      navigate('/clientes'); 
+      navigate('/dashboard'); 
       
     } catch (error) {
       console.error(error);
