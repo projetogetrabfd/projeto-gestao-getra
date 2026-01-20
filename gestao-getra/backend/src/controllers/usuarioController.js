@@ -32,13 +32,54 @@ module.exports = {
   async atualizar(req, res) {
     try {
       const { id } = req.params;
+      const { role, ...otherData } = req.body;
+      
+      // Verificar se está tentando alterar o role
+      if (role) {
+        // Apenas ADMIN_MASTER pode alterar roles
+        if (req.user.role !== 'ADMIN_MASTER') {
+          return res.status(403).json({ erro: "Apenas ADMIN_MASTER pode alterar níveis de acesso" });
+        }
+      }
+      
       const usuarioAtualizado = await prisma.usuario.update({
         where: { id: Number(id) },
-        data: req.body
+        data: { ...otherData, ...(role && { role }) }
       });
       return res.json(usuarioAtualizado);
     } catch (error) {
       return res.status(404).json({ erro: "Usuário não encontrado ou erro na atualização." });
+    }
+  },
+
+  //Alterar role de usuário (apenas ADMIN_MASTER)
+  async alterarRole(req, res) {
+    try {
+      const { id } = req.params;
+      const { role } = req.body;
+      
+      // Apenas ADMIN_MASTER pode alterar roles
+      if (req.user.role !== 'ADMIN_MASTER') {
+        return res.status(403).json({ erro: "Apenas ADMIN_MASTER pode alterar níveis de acesso" });
+      }
+      
+      // Verificar se o role é válido
+      const rolesValidos = ['CLIENTE', 'FINANCEIRO', 'ADMIN_MASTER'];
+      if (!rolesValidos.includes(role)) {
+        return res.status(400).json({ erro: "Role inválido" });
+      }
+      
+      const usuarioAtualizado = await prisma.usuario.update({
+        where: { id: Number(id) },
+        data: { role }
+      });
+      
+      return res.json({ 
+        message: "Role alterado com sucesso", 
+        usuario: usuarioAtualizado 
+      });
+    } catch (error) {
+      return res.status(404).json({ erro: "Usuário não encontrado ou erro na alteração." });
     }
   },
 

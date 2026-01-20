@@ -52,6 +52,12 @@ enum StatusContaPagar {
   VENCIDA
 }
 
+enum Role {
+  CLIENTE
+  FINANCEIRO
+  ADMIN_MASTER
+}
+
 // --- MODELOS (Tabelas do Banco) ---
 
 model Cliente {
@@ -90,6 +96,7 @@ model Usuario {
   email      String  @unique
   senha_hash String  @db.VarChar(255)
   ativo      Boolean
+  role       Role    @default(CLIENTE)
 
   perfil                Perfil       @relation(fields: [id_perfil], references: [id])
   faturas_criadas       Fatura[]

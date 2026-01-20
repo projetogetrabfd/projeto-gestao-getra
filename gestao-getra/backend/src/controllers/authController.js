@@ -1,4 +1,3 @@
-// ARQUIVO: backend/src/controllers/authController.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -16,7 +15,7 @@ exports.register = async (req, res) => {
         senha_hash: senha, // Salva a senha no campo correto
         ativo: true,       // Usuário nasce ativo
         perfil: {
-          connect: { id: 1 } // <--- FORMA CORRETA DE VINCULAR O PERFIL 1
+          connect: { id: 1 } // Vincula o perfil 1
         }
       }
     });
@@ -25,7 +24,7 @@ exports.register = async (req, res) => {
     
   } catch (error) {
     console.log("ERRO NO CADASTRO:", error);
-    // Se o erro for de email duplicado (P2002)
+    // Se o erro for de email duplicado retorna erro codigo P2002
     if (error.code === 'P2002') {
       return res.status(400).json({ error: "Este email já está cadastrado." });
     }
@@ -42,7 +41,7 @@ exports.login = async (req, res) => {
       where: { email }
     });
 
-    // 2. Se não achar o usuário OU a senha não bater (comparando com senha_hash)
+    // 2. Se não achar o usuário OU a senha não bater
     if (!user || user.senha_hash !== senha) {
       return res.status(401).json({ error: "Email ou senha incorretos" });
     }
@@ -57,7 +56,8 @@ exports.login = async (req, res) => {
     
     res.json({ 
       message: "Login realizado com sucesso", 
-      user: userSemSenha 
+      user: userSemSenha,
+      token: user.id.toString() // Token temporário (em produção usar JWT)
     });
 
   } catch (error) {
