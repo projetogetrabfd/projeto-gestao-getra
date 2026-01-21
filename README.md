@@ -10,8 +10,8 @@
   - Financeiro (Pagamentos)
 
 ### FINANCEIRO
-- **Permissões:** Todas as telas exceto alteração de roles
--  Dashboard, Clientes, Faturas, Análise, Serviços, Upload NF, Pagamento
+- **Permissões:**
+-  Dashboard, Clientes, Faturas, Pagamento
 
 ### ADMIN_MASTER (Diretoria)
 - **Permissões:** Acesso total a todas as funcionalidades

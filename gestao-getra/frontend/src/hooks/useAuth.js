@@ -36,8 +36,8 @@ export function useAuth() {
     console.log('Verificando permissão para:', user.role, 'página:', page);
     
     const permissions = {
-      'CLIENTE': ['notas', 'pagamento', 'dashboard'],
-      'FINANCEIRO': ['dashboard', 'clientes', 'faturas', 'analise', 'servicos', 'notas', 'pagamento'],
+      'CLIENTE': ['dashboard', 'notas', 'pagamento'],
+      'FINANCEIRO': ['dashboard', 'clientes', 'faturas', 'pagamento'],
       'ADMIN_MASTER': ['dashboard', 'clientes', 'faturas', 'analise', 'servicos', 'notas', 'pagamento']
     };
     
