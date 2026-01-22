@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Sidebar } from '../Components/Sidebar';
 
 export function Faturas() {
   const [listaFaturas, setListaFaturas] = useState([]);
@@ -44,7 +43,7 @@ export function Faturas() {
 
   useEffect(() => { carregarTudo(); }, []);
 
-  // --- A MÁGICA: Preencher valor ao escolher serviço ---
+  // --- Preencher valor ao escolher serviço ---
   function handleServicoChange(e) {
     const idServico = e.target.value;
     setServicoSelecionado(idServico);
@@ -103,9 +102,7 @@ export function Faturas() {
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
 
   return (
-    <div className="app-container">
-      <Sidebar />
-      <main className="main-content">
+    <div>
         <header className="page-header">
           <h2 className="page-title">Lançamento de Faturas</h2>
           <button className="btn-primary" style={{ width: 'auto' }} onClick={() => setModalAberto(true)}>
@@ -117,7 +114,6 @@ export function Faturas() {
           <p>Carregando faturas...</p>
         ) : (
           <>
-            {/* ÁREA DA TABELA (Sem gráficos agora) */}
             <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>Histórico de Lançamentos</h3>
             
             {listaFaturas.length === 0 ? <p>Nenhuma fatura registrada.</p> : (
@@ -168,7 +164,6 @@ export function Faturas() {
             )}
           </>
         )}
-      </main>
 
       {/* --- MODAL --- */}
       {modalAberto && (
@@ -186,7 +181,6 @@ export function Faturas() {
                   {listaClientes.map(c => <option key={c.id} value={c.id}>{c.nome_razao_social}</option>)}
                 </select>
 
-                {/* NOVO CAMPO DE SERVIÇO */}
                 <div style={{ margin: '1rem 0', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
                   <label className="form-label" style={{ color: 'var(--getra-green-dark)' }}>Preencher com Serviço (Opcional):</label>
                   <select className="form-control" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)' }} value={servicoSelecionado} onChange={handleServicoChange}>

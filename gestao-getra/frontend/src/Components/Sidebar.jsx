@@ -2,6 +2,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export function Sidebar() {
+
+  
   const location = useLocation(); // Para saber em qual página estamos
   const navigate = useNavigate();
   const { user, canAccess } = useAuth();

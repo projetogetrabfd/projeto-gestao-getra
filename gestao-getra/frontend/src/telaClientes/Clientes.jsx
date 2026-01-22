@@ -1,23 +1,18 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Sidebar } from '../Components/Sidebar';
 
 export function Clientes() {
   const [clientes, setClientes] = useState([]);
   const [modalAberto, setModalAberto] = useState(false);
   
   // ESTADOS DO FORMULÁRIO
-  const [idEmEdicao, setIdEmEdicao] = useState(null); // Guarda o ID se estivermos editando
+  const [idEmEdicao, setIdEmEdicao] = useState(null);
   
   const [nomeRazao, setNomeRazao] = useState('');
   const [cpfCnpj, setCpfCnpj] = useState('');
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
   const [endereco, setEndereco] = useState('');
-
-  const navigate = useNavigate();
-  const usuario = JSON.parse(localStorage.getItem('usuario'));
 
   // --- BUSCAR CLIENTES ---
   const carregarClientes = () => {
@@ -27,12 +22,8 @@ export function Clientes() {
   };
 
   useEffect(() => {
-    if (!usuario) {
-      navigate('/');
-      return;
-    }
     carregarClientes();
-  }, [navigate, usuario]);
+  }, []);
 
   // --- LIMPAR FORMULÁRIO ---
   function limparFormulario() {
@@ -41,7 +32,7 @@ export function Clientes() {
     setEmail('');
     setTelefone('');
     setEndereco('');
-    setIdEmEdicao(null); // Importante: Reseta o modo de edição
+    setIdEmEdicao(null);
   }
 
   function abrirModalCriacao() {
@@ -49,9 +40,9 @@ export function Clientes() {
     setModalAberto(true);
   }
 
-  // --- PREPARAR EDIÇÃO (Preenche o modal com dados existentes) ---
+  // --- PREPARAR EDIÇÃO ---
   function abrirModalEdicao(cliente) {
-    setIdEmEdicao(cliente.id); // Diz para o sistema: "Estamos editando este cara"
+    setIdEmEdicao(cliente.id);
     setNomeRazao(cliente.nome_razao_social);
     setCpfCnpj(cliente.cpf_cnpj);
     setEmail(cliente.email);
@@ -60,7 +51,7 @@ export function Clientes() {
     setModalAberto(true);
   }
 
-  // --- SALVAR (CRIA OU ATUALIZA) ---
+  // --- SALVAR ---
   async function handleSalvarCliente(e) {
     e.preventDefault();
     const dados = {
@@ -73,11 +64,9 @@ export function Clientes() {
 
     try {
       if (idEmEdicao) {
-        // MODO ATUALIZAR (PUT)
         await axios.put(`http://localhost:3000/clientes/${idEmEdicao}`, dados);
         alert("Cliente atualizado com sucesso!");
       } else {
-        // MODO CRIAR (POST)
         await axios.post('http://localhost:3000/clientes', dados);
         alert("Cliente cadastrado com sucesso!");
       }
@@ -93,8 +82,7 @@ export function Clientes() {
 
   // --- DELETAR ---
   async function handleDeletar(id) {
-    // Pergunta de segurança
-    const confirmacao = window.confirm("Tem certeza que deseja excluir este cliente? Essa ação não pode ser desfeita.");
+    const confirmacao = window.confirm("Tem certeza que deseja excluir este cliente?");
     
     if (confirmacao) {
       try {
@@ -109,10 +97,7 @@ export function Clientes() {
   }
 
   return (
-    <div className="app-container">
-      <Sidebar />
-      
-      <main className="main-content">
+    <div>
         <header className="page-header">
           <h2 className="page-title">Gestão de Clientes</h2>
           <button 
@@ -169,7 +154,6 @@ export function Clientes() {
             </table>
           </div>
         )}
-      </main>
 
       {/* MODAL */}
       {modalAberto && (

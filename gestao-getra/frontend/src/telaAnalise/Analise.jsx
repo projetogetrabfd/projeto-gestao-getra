@@ -71,8 +71,7 @@ export function Analise() {
   useEffect(() => { carregarDados(); }, []);
 
   return (
-    <div className="app-container">
-      <Sidebar />
+    
       <main className="main-content">
         <header className="page-header">
           <h2 className="page-title">Análise Financeira</h2>
@@ -88,6 +87,6 @@ export function Analise() {
           </div>
         )}
       </main>
-    </div>
+    
   );
 }

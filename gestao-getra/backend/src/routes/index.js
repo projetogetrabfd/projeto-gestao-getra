@@ -23,6 +23,7 @@ router.get('/notas', NotaController.listarNotas);
 router.post('/auth/register', authController.register);
 router.post('/auth/login', authController.login);
 
+
 // Clientes
 router.get('/clientes', clienteController.listar);
 router.post('/clientes', clienteController.criar);

@@ -1,224 +1,183 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Sidebar } from '../Components/Sidebar';
+import { useAuth } from '../hooks/useAuth';
 
 export function NotasFiscais() {
-  const [arquivo, setArquivo] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [dados, setDados] = useState({
-    numero: '',
-    valor: '',
-    data_emissao: '',
-    cnpj: '',
-    resumo: ''
-  });
+  const { user } = useAuth();
+  
+  // Verifica se é STAFF (Admin ou Financeiro)
+  const isStaff = ['ADMIN_MASTER', 'ADMIN', 'FINANCEIRO'].includes(user?.role);
 
-  // 1. Quando o usuário escolhe o arquivo
+  // Estados
+  const [arquivo, setArquivo] = useState(null);
+  const [listaClientes, setListaClientes] = useState([]);
+  const [clienteSelecionado, setClienteSelecionado] = useState(''); // Só usado se for Staff
+  const [loading, setLoading] = useState(false);
+  const [mensagem, setMensagem] = useState({ tipo: '', texto: '' });
+
+  // Carrega lista de clientes APENAS se for Staff
+  useEffect(() => {
+    if (isStaff) {
+      async function buscarClientes() {
+        try {
+          const res = await axios.get('http://localhost:3000/clientes');
+          setListaClientes(res.data);
+        } catch (error) {
+          console.error("Erro ao carregar clientes para o select", error);
+        }
+      }
+      buscarClientes();
+    }
+  }, [isStaff]);
+
   const handleFileChange = (e) => {
     setArquivo(e.target.files[0]);
   };
 
-  // 2. Enviar para o Backend ler
-  const handleLerArquivo = async () => {
-    if (!arquivo) return alert("Selecione um PDF primeiro!");
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    setMensagem({ tipo: '', texto: '' });
 
-    const formData = new FormData();
-    formData.append('pdf', arquivo); // 'pdf' deve bater com o nome na rota do backend
-
-    try {
-      setLoading(true);
-      const response = await axios.post('http://localhost:3000/upload-nota', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      const info = response.data.dadosExtraidos;
-      
-      // Preenche os campos automaticamente
-      setDados({
-        numero: info.numero_nota || '',
-        valor: info.valor || '',
-        data_emissao: formatarDataParaInput(info.data_emissao), // Converte dd/mm/aaaa para aaaa-mm-dd
-        cnpj: info.cnpj_emitente || '',
-        resumo: "Nota lida automaticamente do arquivo: " + arquivo.name
-      });
-
-      alert("Leitura concluída! Verifique os dados abaixo.");
-
-    } catch (error) {
-      console.error(error);
-      alert("Erro ao ler o arquivo. Certifique-se que é um PDF de texto (não imagem).");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Função auxiliar para converter dd/mm/aaaa -> aaaa-mm-dd (para o input date)
-  function formatarDataParaInput(dataBrasileira) {
-    if (!dataBrasileira) return '';
-    const partes = dataBrasileira.split('/');
-    if (partes.length === 3) {
-      return `${partes[2]}-${partes[1]}-${partes[0]}`;
-    }
-    return '';
-  }
-
-  // 3. Salvar no Banco (Aqui podemos criar uma Fatura ou salvar na tabela NotaFiscal)
-  // Função para o botão "Confirmar e Salvar"
-  const handleSalvar = async () => {
-    // 1. Validação simples antes de enviar
-    if (!dados.numero || !dados.valor || !dados.cnpj) {
-      alert("Por favor, preencha todos os campos obrigatórios antes de salvar.");
+    if (!arquivo) {
+      setMensagem({ tipo: 'erro', texto: 'Por favor, selecione um arquivo (PDF ou XML).' });
       return;
     }
 
-    try {
-      setLoading(true);
+    // LÓGICA DE IDENTIFICAÇÃO DO CLIENTE
+    let idFinal = null;
 
-      // 2. Formatar a data para o Backend (IMPORTANTE!)
-      // O seu backend espera "dd/mm/aaaa", mas o input date do HTML usa "aaaa-mm-dd".
-      // Vamos converter:
-      let dataParaBackend = dados.data_emissao;
-      if (dados.data_emissao.includes('-')) {
-         const [ano, mes, dia] = dados.data_emissao.split('-');
-         dataParaBackend = `${dia}/${mes}/${ano}`;
+    if (isStaff) {
+      // Se for Staff, é OBRIGATÓRIO ter escolhido alguém no select
+      if (!clienteSelecionado) {
+        setMensagem({ tipo: 'erro', texto: 'Como você é administrador, precisa selecionar a qual cliente essa nota pertence.' });
+        return;
       }
+      idFinal = clienteSelecionado;
+    } else {
+      // Se for Cliente, o ID é ele mesmo
+      idFinal = user.id;
+    }
 
-      // 3. Montar o objeto (Payload) igual o Backend espera
-      const payload = {
-        numero: dados.numero,
-        valor: dados.valor,            // Ex: "1500.50"
-        data_emissao: dataParaBackend, // Ex: "05/01/2026"
-        cnpj_emitente: dados.cnpj,     // O backend usa esse CNPJ para achar o cliente
-        link_pdf: ""                   // Opcional, ou mande o nome do arquivo se quiser
-      };
+    // Envio
+    const formData = new FormData();
+    formData.append('arquivo', arquivo);
+    formData.append('id_cliente', idFinal);
 
-      console.log("Enviando dados:", payload); // Debug no navegador
+    setLoading(true);
 
-      // 4. Enviar para a rota que cria Nota + Fatura
-      const response = await axios.post('http://localhost:3000/notas', payload);
-
-      // 5. Sucesso!
-      alert("Sucesso! Nota e Fatura geradas.");
-      console.log("Resposta:", response.data);
-      window.alert("Nota Salva com Sucesso!");
-      
-      setDados({
-          numero: '',
-          valor: '',
-          data_emissao: '',
-          cnpj: '',
-          resumo: ''
+    try {
+      // Ajuste a rota para a sua rota real do Backend (a que usa Multer)
+      await axios.post('http://localhost:3000/notas/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-      setArquivo(null);
+
+      setMensagem({ tipo: 'sucesso', texto: 'Nota fiscal enviada com sucesso!' });
+      setArquivo(null); // Limpa state do arquivo
+      setClienteSelecionado(''); 
+      // Resetar o input file via DOM é difícil no React puro sem ref, mas o usuário vê a msg de sucesso.
 
     } catch (error) {
-      console.error("Erro ao salvar:", error);
-      
-      // Tratamento de erro detalhado (Ex: Cliente não encontrado)
-      const msgErro = error.response?.data?.erro || "Erro desconhecido";
-      const detalhe = error.response?.data?.detalhe || "";
-      alert(`Falha ao salvar: ${msgErro}\n${detalhe}`);
-      
+      console.error(error);
+      const msgErro = error.response?.data?.erro || 'Erro ao enviar o arquivo.';
+      setMensagem({ tipo: 'erro', texto: msgErro });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="app-container">
-      <Sidebar />
-      
-      <main className="main-content">
-        <header className="page-header">
-          <h2 className="page-title">Upload de Notas Fiscais (IA/OCR)</h2>
-        </header>
+    <div>
+      <header className="page-header">
+        <h2 className="page-title">Envio de Notas Fiscais</h2>
+      </header>
 
-        {/* ÁREA DE UPLOAD */}
-        <div className="card" style={{ textAlign: 'center', border: '2px dashed var(--border-color)', background: 'var(--getra-gray-bg)' }}>
-          <h3 style={{ marginTop: 0, color: 'var(--text-primary)' }}>1. Selecione a Nota Fiscal (PDF)</h3>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>O sistema irá ler o conteúdo automaticamente.</p>
+      <div className="card" style={{ maxWidth: '600px', margin: '0 auto' }}>
+        
+        {/* MENSAGEM DIFERENCIADA NO TOPO */}
+        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+            {isStaff ? (
+                <p style={{ color: '#d97706', background: '#fffbeb', padding: '10px', borderRadius: '6px', border: '1px solid #fcd34d' }}>
+                    🔒 Modo Administrativo: Você está lançando uma nota em nome de um cliente.
+                </p>
+            ) : (
+                <p style={{ color: '#166534', background: '#dcfce7', padding: '10px', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
+                    👋 Olá, <strong>{user?.nome}</strong>. Use o formulário abaixo para nos enviar suas notas.
+                </p>
+            )}
+        </div>
+
+        <form onSubmit={handleUpload}>
           
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'center', marginTop: '1.5rem' }}>
-            <input type="file" accept=".pdf" onChange={handleFileChange} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--white)' }} />
-            <button 
-              className="btn-primary" 
-              style={{ width: 'auto' }}
-              onClick={handleLerArquivo}
-              disabled={loading || !arquivo}
-            >
-              {loading ? 'Lendo Arquivo...' : 'Fazer Upload e Ler'}
-            </button>
+          {/* SELETOR DE CLIENTE (Só aparece para STAFF) */}
+          {isStaff && (
+            <div className="form-group">
+              <label className="form-label">Cliente (Dono da Nota)</label>
+              <select 
+                className="form-control"
+                value={clienteSelecionado}
+                onChange={(e) => setClienteSelecionado(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
+              >
+                <option value="">-- Selecione o Cliente --</option>
+                {listaClientes.map(c => (
+                  <option key={c.id} value={c.id}>{c.nome_razao_social}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* INPUT DE ARQUIVO (Igual para todos) */}
+          <div className="form-group" style={{ marginTop: '20px' }}>
+            <label className="form-label">Arquivo da Nota (PDF ou XML)</label>
+            <div style={{ 
+                border: '2px dashed #ccc', 
+                borderRadius: '8px', 
+                padding: '30px', 
+                textAlign: 'center',
+                backgroundColor: '#fafafa',
+                cursor: 'pointer'
+            }}>
+                <input 
+                    type="file" 
+                    accept=".pdf,.xml"
+                    onChange={handleFileChange}
+                    style={{ width: '100%' }}
+                />
+                {!arquivo && <p style={{color: '#999', marginTop: 10}}>Clique para selecionar ou arraste aqui</p>}
+            </div>
+            {arquivo && (
+                <p style={{ marginTop: '10px', color: '#333', fontWeight: 'bold' }}>
+                    Arquivo selecionado: {arquivo.name}
+                </p>
+            )}
           </div>
-        </div>
 
-        {/* FORMULÁRIO COM DADOS LIDOS */}
-        <div className="card">
-          <h3 style={{ marginTop: 0, color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-            2. Conferência de Dados
-          </h3>
-          
-          <form onSubmit={handleSalvar}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-              
-              <div className="form-group">
-                <label className="form-label">Número da Nota</label>
-                <input 
-                  type="text" 
-                  value={dados.numero} 
-                  onChange={e => setDados({...dados, numero: e.target.value})}
-                  placeholder="Ex: 123456"
-                />
-              </div>
+          {/* BOTÃO DE AÇÃO */}
+          <button 
+            type="submit" 
+            className="btn-primary" 
+            disabled={loading}
+            style={{ marginTop: '20px' }}
+          >
+            {loading ? 'Enviando...' : '📤 Enviar Nota Fiscal'}
+          </button>
 
-              <div className="form-group">
-                <label className="form-label">CNPJ Emitente</label>
-                <input 
-                  type="text" 
-                  value={dados.cnpj} 
-                  onChange={e => setDados({...dados, cnpj: e.target.value})}
-                />
-              </div>
+        </form>
 
-              <div className="form-group">
-                <label className="form-label">Data de Emissão</label>
-                <input 
-                  type="date" 
-                  value={dados.data_emissao} 
-                  onChange={e => setDados({...dados, data_emissao: e.target.value})}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Valor Total (R$)</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  value={dados.valor} 
-                  onChange={e => setDados({...dados, valor: e.target.value})}
-                  style={{ fontWeight: '600', color: 'var(--getra-green-dark)' }} 
-                />
-              </div>
-
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">Resumo / Observações</label>
-                <input 
-                  type="text" 
-                  value={dados.resumo} 
-                  onChange={e => setDados({...dados, resumo: e.target.value})}
-                />
-              </div>
-
-            </div>
-
-            <div style={{ marginTop: '2rem', textAlign: 'right' }}>
-              <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '0.75rem 2rem' }}>
-                Confirmar e Salvar Nota
-              </button>
-            </div>
-          </form>
-        </div>
-
-      </main>
+        {/* FEEDBACK VISUAL */}
+        {mensagem.texto && (
+          <div style={{ 
+            marginTop: '20px', 
+            padding: '15px', 
+            borderRadius: '8px', 
+            textAlign: 'center',
+            backgroundColor: mensagem.tipo === 'sucesso' ? '#dcfce7' : '#fee2e2',
+            color: mensagem.tipo === 'sucesso' ? '#166534' : '#991b1b'
+          }}>
+            {mensagem.texto}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

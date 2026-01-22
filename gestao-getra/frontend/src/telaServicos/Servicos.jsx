@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Sidebar } from '../Components/Sidebar';
 
 export function Servicos() {
   const [servicos, setServicos] = useState([]);
@@ -77,10 +76,7 @@ export function Servicos() {
   const formatMoney = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
   return (
-    <div className="app-container">
-      <Sidebar />
-      
-      <main className="main-content">
+    <div>
         <header className="page-header">
           <h2 className="page-title">Catálogo de Serviços</h2>
           <button className="btn-primary" style={{ width: 'auto' }} onClick={() => abrirModal()}>
@@ -125,9 +121,7 @@ export function Servicos() {
             </table>
           </div>
         )}
-      </main>
-
-      {/* MODAL */}
+      
       {modalAberto && (
         <div className="modal-overlay">
           <div className="modal-content">

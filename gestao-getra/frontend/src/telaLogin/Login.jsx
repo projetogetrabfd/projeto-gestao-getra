@@ -1,80 +1,81 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth'; // Se você usar Contexto
 
 export function Login() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  async function handleLogin(event) {
-    event.preventDefault();
+  
+  // Se você tiver um hook de auth, use a função dele, senão faça manual:
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setLoading(true);
 
     try {
-      // Chama o backend para verificar a senha
+      // A ROTA TEM QUE SER /auth/login
       const response = await axios.post('http://localhost:3000/auth/login', {
         email,
         senha
       });
 
-      // SUCESSO! O backend devolveu os dados do usuário.
-      // Vamos salvar no navegador para não perder o login ao atualizar a página.
-      localStorage.setItem('usuario', JSON.stringify(response.data.user));
+      const usuario = response.data;
 
-      // Redireciona para a tela principal
-      navigate('/dashboard'); 
+      // Salva no LocalStorage
+      localStorage.setItem('usuario', JSON.stringify(usuario));
       
+      // Se usar Contexto/Hook, atualize ele aqui (ex: login(usuario))
+      
+      // Redireciona
+      if (usuario.role === 'CLIENTE') {
+        navigate('/dashboard'); // O index.jsx vai redirecionar pro DashboardCliente
+      } else {
+        navigate('/dashboard'); // O index.jsx vai redirecionar pro DashboardDiretoria
+      }
+
     } catch (error) {
       console.error(error);
-      alert("Falha no login: " + (error.response?.data?.error || "Email ou senha incorretos"));
+      alert(error.response?.data?.erro || "Erro ao conectar com o servidor.");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <div className="auth-header">
-          <h1 className="auth-logo-text">
-            <span>G</span> GETRA
-          </h1>
-        </div>
-        
+        <h2 className="auth-header">Acesse sua conta</h2>
         <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label htmlFor="email" className="form-label">E-mail Corporativo</label>
+            <label className="form-label">Email</label>
             <input 
-              id="email"
-              type="email" 
-              placeholder="seu.email@getra.com.br" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              required 
+               type="email" 
+               value={email} 
+               onChange={e => setEmail(e.target.value)} 
+               required 
             />
             
-            <label htmlFor="senha" className="form-label">Senha de Acesso</label>
+            <label className="form-label">Senha</label>
             <input 
-              id="senha"
-              type="password" 
-              placeholder="••••••••" 
-              value={senha} 
-              onChange={e => setSenha(e.target.value)} 
-              required 
+               type="password" 
+               value={senha} 
+               onChange={e => setSenha(e.target.value)} 
+               required 
             />
           </div>
-          
+
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Autenticando...' : 'Acessar Painel'}
+            {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
         
         <div className="auth-links">
-        <p>Esqueceu sua senha? <Link to="/redefinir">Recuperar acesso</Link></p>
-        <p style={{marginTop: '0.5rem'}}>Novo colaborador? <Link to="/cadastro">Solicitar conta</Link></p>
-      </div>
+           <a href="/cadastro">Não tem conta? Cadastre-se</a>
+           <br/><br/>
+           <a href="/redefinir">Esqueci minha senha</a>
+        </div>
       </div>
     </div>
   );

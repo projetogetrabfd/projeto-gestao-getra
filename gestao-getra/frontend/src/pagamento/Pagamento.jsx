@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { Sidebar } from '../Components/Sidebar';
 
 export function Pagamento() {
   const [valor, setValor] = useState('');
@@ -40,8 +39,7 @@ export function Pagamento() {
   };
 
   return (
-    <div className="app-container">
-      <Sidebar />
+    
       
       <main className="main-content">
         <header className="page-header">
@@ -198,6 +196,6 @@ export function Pagamento() {
           )}
         </div>
       </main>
-    </div>
+    
   );
 }
