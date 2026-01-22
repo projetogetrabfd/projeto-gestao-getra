@@ -6,30 +6,42 @@ module.exports = {
   async listar(req, res) {
     try {
       const faturas = await prisma.fatura.findMany({
-        include: { cliente: true }, // Traz o nome do cliente junto
-        orderBy: { data_vencimento: 'asc' } // Ordena por vencimento
+        orderBy: { id: 'desc' },
+        include: {
+          cliente: true, 
+          recorrencia: {
+            include: {
+              servico: true
+            }
+          }
+        }
       });
       return res.json(faturas);
     } catch (error) {
+      console.error(error);
       return res.status(500).json({ erro: "Erro ao buscar faturas" });
     }
   },
 
   // Criar
-  async criar(req, res) {
+ async criar(req, res) {
     try {
-      const { id_cliente, valor_total, data_vencimento, status } = req.body;
-      const novaFatura = await prisma.fatura.create({
-        data: {
-          id_cliente: Number(id_cliente),
-          valor_total: parseFloat(valor_total),
-          data_vencimento: new Date(data_vencimento),
-          status: status || 'PENDENTE'
-        }
-      });
-      return res.status(201).json(novaFatura);
+        // Agora recebemos 'descricao' do frontend
+        const { id_cliente, valor_total, data_vencimento, status, descricao } = req.body;
+        
+        const novaFatura = await prisma.fatura.create({
+            data: {
+                id_cliente: Number(id_cliente),
+                valor_total: parseFloat(valor_total),
+                data_vencimento: new Date(data_vencimento),
+                status: status,
+                descricao: descricao || null // Salva a descrição!
+            }
+        });
+        return res.status(201).json(novaFatura);
     } catch (error) {
-      return res.status(400).json({ erro: "Erro ao criar fatura." });
+        console.error(error); // Bom para ver erros no terminal
+        return res.status(500).json({erro: "Erro ao criar fatura"});
     }
   },
 

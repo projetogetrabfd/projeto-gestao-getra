@@ -1,44 +1,80 @@
-# Projeto Gestão Getra 
+# Sistema de Permissões - GETRA
 
-Este repositório contém o código fonte do sistema de gestão financeira para a empresa GETRA.
+## Roles Definidos
 
-## Novidades da Versão 
-Foi implementado um fluxo completo de automação para entrada de notas fiscais de serviço (NFS-e). O objetivo é reduzir o trabalho manual de cadastro de contas a pagar.
+### CLIENTE (Usuário Padrão)
+- **Acesso via:** Página do Cliente
+- **Permissões:**
+  - Dashboard
+  - Lançamentos (Upload de Notas Fiscais)
+  - Financeiro (Pagamentos)
 
-### Funcionalidades Implementadas
+### FINANCEIRO
+- **Permissões:**
+-  Dashboard, Clientes, Faturas, Pagamento
 
-- **Leitura de PDF (Parsing):** O sistema agora aceita upload de arquivos PDF de notas fiscais.
-- **Extração Inteligente (OCR/Regex):** Extração automática de dados chave do arquivo via backend:
-  - CNPJ do Emitente
-  - Número da Nota
-  - Data de Emissão
-  - Valor Total
-- **Associação Automática:** Busca automática do Cliente no banco de dados através do CNPJ extraído do PDF.
-- **Geração de Fatura e Nota:** Ao confirmar a importação, o sistema cria automaticamente em uma única transação:
-  1. Uma **Fatura** (Contas a Pagar) vinculada ao Cliente encontrado.
-  2. Uma **Nota Fiscal** vinculada a essa Fatura.
-- ** Exclusão em Cascata:** Configuração do banco de dados para permitir a exclusão de Faturas removendo automaticamente suas Notas Fiscais atreladas (`onDelete: Cascade`), evitando erros de integridade.
+### ADMIN_MASTER (Diretoria)
+- **Permissões:** Acesso total a todas as funcionalidades
+-  Todas as telas + alteração de roles de usuários
 
----
+## Arquivos Criados
 
-##  Tecnologias e Bibliotecas Chave
+### Backend
+- **`src/middleware/authMiddleware.js`**  Middleware de autenticação e verificação de permissões
+- **`prisma.config.js`**  Configuração do Prisma para conexão com banco
 
-- **Backend:** Node.js + Express
-- **Banco de Dados:** PostgreSQL + Prisma ORM
-- **Leitura de PDF:** `pdf-parse` (Versão 1.1.1 - *Estável*)
-- **Upload:** Multer
-- **Frontend:** React + Axios
+### Frontend
+- **`src/hooks/useAuth.js`** - Hook customizado para gerenciar autenticação e permissões
+- **`src/Components/ProtectedRoute.jsx`** - Componente para proteger rotas baseado em roles
 
----
+## Arquivos Modificados
 
-##  Correções e Ajustes Técnicos Realizados
+### Backend
+- **`prisma/schema.prisma`**
+  - Adicionado enum `Role` com valores: CLIENTE, FINANCEIRO, ADMIN_MASTER
+  - Adicionado campo `role` na tabela `Usuario` com valor padrão `CLIENTE`
 
-Durante o desenvolvimento deste módulo, foram realizadas as seguintes correções críticas:
+- **`src/controllers/authController.js`**
+  - Login agora retorna `token` e `user` com informações completas incluindo `role`
+  - Token temporário usando ID do usuário (produção deve usar JWT)
 
-### 1. Biblioteca `pdf-parse` (Fix de Versão)
-Houve um ajuste crítico na versão da biblioteca de leitura de PDF para garantir compatibilidade com o fluxo de extração de texto.
-- **Problema Anterior:** Versões instáveis (`^2.4.5`) retornavam Objetos complexos incompatíveis com a função de leitura direta.
-- **Solução:** Downgrade forçado para a versão estável `1.1.1`.
-- **Instalação correta:**
-  ```bash
-  npm install pdf-parse@1.1.1
+- **`src/controllers/usuarioController.js`**
+  - Implementada validação: apenas `ADMIN_MASTER` pode alterar roles
+  - Novo método `alterarRole()` para mudança segura de papéis
+
+### Frontend
+- **`src/Components/Sidebar.jsx`**
+  - Sidebar inteligente que oculta itens conforme permissão do usuário
+  - Exibe role do usuário para identificação visual
+  - Usa hook `useAuth()` para verificar permissões dinamicamente
+
+- **`src/App.jsx`**
+  - Todas as rotas privadas protegidas com `ProtectedRoute`
+  - Validação de role específica por tela
+  - Redirecionamento automático para usuários não autorizados
+
+- **`src/telaLogin/Login.jsx`**
+  - Corrigido redirecionamento para `/dashboard` após login
+  - Salva dados completos do usuário no localStorage
+
+## Como Usar
+
+### 1. Iniciar Servidores
+```bash
+# Backend
+cd gestao-getra/backend
+npm run dev
+
+# Frontend  
+cd gestao-getra/frontend
+npm run dev
+
+# Prisma Studio (visualizar banco)
+npx prisma studio
+```
+
+### 2. Testar Permissões
+- Faça login com diferentes usuários:
+  - `adm@getra` → Acesso total
+  - `financeiro@getra` → Acesso financeiro completo
+  - `cliente@getra` → Acesso básico

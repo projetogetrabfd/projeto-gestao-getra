@@ -1,69 +1,77 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs'); // Importante: npm install bcryptjs
+
 const prisma = new PrismaClient();
 
 async function main() {
   console.log(' Iniciando o Seed (Populando banco)...');
-
-  // 1. CRIAR PERFIS (Se não existirem)
-  // Usamos upsert: "Se existir, não faz nada. Se não existir, cria."
+  const senhaHash = await bcrypt.hash('123456', 10);
   const perfilAdmin = await prisma.perfil.upsert({
     where: { id: 1 },
     update: {},
     create: {
       id: 1,
-      nome: 'ADMIN',
-      descricao: 'Acesso total ao sistema'
+      nome: 'Administrador',
+      permissoes: '{"acesso": "total"}' 
     },
   });
 
-  const perfilCliente = await prisma.perfil.upsert({
+  const perfilFinanceiro = await prisma.perfil.upsert({
     where: { id: 2 },
     update: {},
     create: {
       id: 2,
-      nome: 'CLIENTE',
-      descricao: 'Acesso limitado a faturas'
+      nome: 'Financeiro',
+      permissoes: '{"acesso": "financeiro"}'
     },
   });
 
-  console.log(' Perfis criados/verificados.');
-
-  // 2. CRIAR USUÁRIO ADMIN
-  // Importante: Não passamos ID aqui, deixamos o banco gerar.
-  const adminEmail = 'admin@getra.com.br';
-  
-  const usuarioAdmin = await prisma.usuario.upsert({
-    where: { email: adminEmail },
-    update: {}, // Se já existe, não muda nada
+  const perfilCliente = await prisma.perfil.upsert({
+    where: { id: 3 },
+    update: {},
     create: {
-      nome: 'Administrador',
+      id: 3,
+      nome: 'Cliente',
+      permissoes: '{"acesso": "basico"}'
+    },
+  });
+
+  console.log(' Perfis garantidos.');
+
+  const adminEmail = 'admin@getra.com';
+  await prisma.usuario.upsert({
+    where: { email: adminEmail },
+    update: {},
+    create: {
+      nome: 'Admin Master',
       email: adminEmail,
-      senha: '123', // Se usar hash no sistema, coloque o hash aqui
+      senha_hash: senhaHash, 
+      role: 'ADMIN_MASTER',  
       ativo: true,
-      // Conecta ao perfil ID 1 que garantimos ali em cima
       perfil: {
         connect: { id: 1 } 
       }
     },
   });
+  console.log(` Usuário Admin criado: ${adminEmail} (Senha: 123456)`);
 
-  console.log(' Usuário Admin criado.');
-  
-  // 3. (OPCIONAL) CRIAR O CLIENTE DA NOTA FISCAL PARA TESTE
-  // Isso resolve o problema da Nota parar de salvar
-  await prisma.cliente.upsert({
-      where: { cpf_cnpj: '12.345.678/0001-99' }, // CNPJ do seu PDF de teste
-      update: {},
-      create: {
-          nome: 'Empresa Teste Ltda',
-          cpf_cnpj: '12.345.678/0001-99',
-          email: 'teste@empresa.com',
-          telefone: '11999999999',
-          // Preencha outros campos obrigatórios do seu schema Cliente
+  const financeiroEmail = 'financeiro@getra.com';
+  await prisma.usuario.upsert({
+    where: { email: financeiroEmail },
+    update: {},
+    create: {
+      nome: 'Gerente Financeiro',
+      email: financeiroEmail,
+      senha_hash: senhaHash,
+      role: 'FINANCEIRO',  
+      ativo: true,
+      perfil: {
+        connect: { id: 2 }
       }
+    },
   });
-  console.log(' Cliente de Teste criado.');
-}
+  console.log(` Usuário Financeiro criado: ${financeiroEmail} (Senha: 123456)`);
+
 
 main()
   .catch((e) => {
@@ -72,4 +80,7 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-  });
+  }
+  
+  );
+}

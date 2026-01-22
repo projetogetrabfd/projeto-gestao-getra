@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Sidebar } from '../Components/Sidebar';
 
 export function Servicos() {
   const [servicos, setServicos] = useState([]);
@@ -77,49 +76,52 @@ export function Servicos() {
   const formatMoney = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
   return (
-    <div className="app-layout">
-      <Sidebar />
-      <div className="content-area">
-        <header className="dashboard-header-simple">
-          <h2>Catálogo de Serviços</h2>
-          <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px' }} onClick={() => abrirModal()}>
+    <div>
+        <header className="page-header">
+          <h2 className="page-title">Catálogo de Serviços</h2>
+          <button className="btn-primary" style={{ width: 'auto' }} onClick={() => abrirModal()}>
             + Novo Serviço
           </button>
         </header>
 
-        <main className="dashboard-main">
-          {servicos.length === 0 ? (
-            <p style={{ textAlign: 'center', marginTop: '40px', color: '#666' }}>Nenhum serviço cadastrado.</p>
-          ) : (
-            <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                  <tr>
-                    <th style={{ padding: '15px', textAlign: 'left', color: '#64748b' }}>Nome</th>
-                    <th style={{ padding: '15px', textAlign: 'left', color: '#64748b' }}>Descrição</th>
-                    <th style={{ padding: '15px', textAlign: 'left', color: '#64748b' }}>Valor Padrão</th>
-                    <th style={{ padding: '15px', textAlign: 'right', color: '#64748b' }}>Ações</th>
+        {servicos.length === 0 ? (
+          <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+            <p>Nenhum serviço cadastrado. Crie o primeiro!</p>
+          </div>
+        ) : (
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Descrição</th>
+                  <th>Valor Padrão</th>
+                  <th style={{ textAlign: 'right' }}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {servicos.map(servico => (
+                  <tr key={servico.id}>
+                    <td><strong>{servico.nome}</strong></td>
+                    <td style={{ color: 'var(--text-secondary)' }}>{servico.descricao || '-'}</td>
+                    <td style={{ fontWeight: '600', color: 'var(--getra-green-dark)' }}>
+                      {formatMoney(servico.valor_padrao)}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button className="btn-edit" onClick={() => abrirModal(servico)}>
+                        Editar
+                      </button>
+                      <button className="btn-delete" onClick={() => handleDeletar(servico.id)}>
+                        Excluir
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {servicos.map(s => (
-                    <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '15px', fontWeight: 'bold' }}>{s.nome}</td>
-                      <td style={{ padding: '15px', color: '#666' }}>{s.descricao || '-'}</td>
-                      <td style={{ padding: '15px', color: '#166534', fontWeight: 'bold' }}>{formatMoney(s.valor_padrao)}</td>
-                      <td style={{ padding: '15px', textAlign: 'right' }}>
-                        <button className="btn-edit" onClick={() => abrirModal(s)} style={{ marginRight: '10px' }}>Editar</button>
-                        <button className="btn-delete" onClick={() => handleDeletar(s.id)}>Excluir</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </main>
-      </div>
-
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      
       {modalAberto && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -127,20 +129,43 @@ export function Servicos() {
               <h3>{idEmEdicao ? 'Editar Serviço' : 'Novo Serviço'}</h3>
               <button className="btn-close" onClick={() => setModalAberto(false)}>×</button>
             </div>
+            
             <form onSubmit={handleSalvar}>
               <div className="form-group">
-                <label>Nome do Serviço</label>
-                <input type="text" value={nome} onChange={e => setNome(e.target.value)} required placeholder="Ex: Formatação, Consultoria..." />
+                <label className="form-label">Nome do Serviço</label>
+                <input 
+                  type="text" 
+                  value={nome} 
+                  onChange={e => setNome(e.target.value)} 
+                  required 
+                  placeholder="Ex: Consultoria Mensal"
+                />
                 
-                <label>Descrição (Opcional)</label>
-                <input type="text" value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Detalhes do serviço..." />
-                
-                <label>Valor Padrão (R$)</label>
-                <input type="number" step="0.01" value={valor} onChange={e => setValor(e.target.value)} required placeholder="0.00" />
+                <label className="form-label">Descrição</label>
+                <textarea 
+                  value={descricao} 
+                  onChange={e => setDescricao(e.target.value)} 
+                  rows="3"
+                  className="form-control"
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', resize: 'vertical' }}
+                />
+
+                <label className="form-label">Valor Padrão (R$)</label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  value={valor} 
+                  onChange={e => setValor(e.target.value)} 
+                  required 
+                  placeholder="0.00"
+                />
               </div>
+
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setModalAberto(false)}>Cancelar</button>
-                <button type="submit" className="btn-primary">Salvar</button>
+                <button type="submit" className="btn-primary" style={{ width: 'auto' }}>
+                  {idEmEdicao ? 'Salvar Alterações' : 'Criar Serviço'}
+                </button>
               </div>
             </form>
           </div>

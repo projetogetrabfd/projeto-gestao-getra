@@ -3,43 +3,46 @@ const router = express.Router();
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }); 
 
+// Import dos Controllers
 const authController = require('../controllers/authController');
 const clienteController = require('../controllers/clienteController');
 const faturaController = require('../controllers/faturaController');
 const servicoController = require('../controllers/servicoController');
-const uploadController = require('../controllers/uploadController');
-const NotaController = require('../controllers/notaController'); 
+const pagamentoController = require('../pagamento/pagamentoController');
 
+// Importante: Usaremos o notaController unificado que criamos antes
+const notaController = require('../controllers/notaController'); 
 
-// Leitura de PDF 
-// ATENÇÃO: Aqui está esperando um campo chamado 'pdf'.
-router.post('/upload-nota', upload.single('pdf'), uploadController.lerNotaFiscal);
+// ROTA DE UPLOAD 
+router.post('/notas/upload', upload.single('arquivo'), notaController.upload);
 
-// Salvar Nota e Fatura (A rota nova)
-router.post('/notas', NotaController.criarNota);
-router.get('/notas', NotaController.listarNotas); 
+// Outras rotas de notas (Listagem e Delete)
+router.get('/notas', notaController.listar);
+router.delete('/notas/:id', notaController.deletar);
 
-// Autenticação
+//  Autenticação 
 router.post('/auth/register', authController.register);
 router.post('/auth/login', authController.login);
 
-// Clientes
+// Clientes 
 router.get('/clientes', clienteController.listar);
 router.post('/clientes', clienteController.criar);
 router.put('/clientes/:id', clienteController.atualizar); 
 router.delete('/clientes/:id', clienteController.deletar);
 
-// Faturas
+// Faturas 
 router.get('/faturas', faturaController.listar);
 router.post('/faturas', faturaController.criar);
 router.put('/faturas/:id', faturaController.atualizar); 
 router.delete('/faturas/:id', faturaController.deletar); 
 
-// Serviços
+//  Serviços 
 router.get('/servicos', servicoController.listar);
 router.post('/servicos', servicoController.criar);
 router.put('/servicos/:id', servicoController.atualizar);
 router.delete('/servicos/:id', servicoController.deletar);
 
-// Exportar TUDO no final (SÓ PODE TER UM DESSE)
+//  Pagamento 
+router.post('/pagamento/pix', pagamentoController.gerarPix);
+
 module.exports = router;
