@@ -18,6 +18,7 @@ export function Faturas() {
   const [valor, setValor] = useState('');
   const [dataVencimento, setDataVencimento] = useState('');
   const [status, setStatus] = useState('PENDENTE');
+  const [descricao, setDescricao] = useState('');
 
   // --- Carregar Dados ---
   const carregarTudo = async () => {
@@ -52,8 +53,10 @@ export function Faturas() {
     
     if (servicoEncontrado) {
       setValor(servicoEncontrado.valor_padrao);
+      setDescricao(servicoEncontrado.nome);
     } else {
       setValor('');
+      setDescricao('');
     }
   }
 
@@ -65,12 +68,13 @@ export function Faturas() {
         id_cliente: clienteSelecionado,
         valor_total: valor,
         data_vencimento: dataVencimento,
-        status: status
+        status: status,
+        descricao: descricao
       });
       alert("Fatura lançada!");
       setModalAberto(false);
       setValor(''); setDataVencimento(''); setStatus('PENDENTE'); 
-      setClienteSelecionado(''); setServicoSelecionado('');
+      setClienteSelecionado(''); setServicoSelecionado(''); setDescricao('');
       
       carregarTudo();
     } catch (error) {

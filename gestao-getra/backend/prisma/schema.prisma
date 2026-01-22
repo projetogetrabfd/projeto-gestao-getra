@@ -136,6 +136,7 @@ model Fatura {
   data_vencimento             DateTime
   data_pagamento              DateTime?
   status                      StatusFatura
+  descricao                   String?  @db.VarChar(255)
   tipo_pagamento_preferencial TipoPagamentoPreferencial?
   id_externo_gateway          String?                    @db.VarChar(255)
   linha_digitavel_boleto      String?

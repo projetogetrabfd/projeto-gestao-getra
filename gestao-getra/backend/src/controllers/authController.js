@@ -9,7 +9,7 @@ module.exports = {
     try {
       const { email, senha } = req.body;
 
-      // 1. Busca Usuário com Perfil
+      // 1. Busca Usuário
       const usuario = await prisma.usuario.findUnique({
         where: { email },
         include: { perfil: true } 
@@ -20,36 +20,34 @@ module.exports = {
       }
 
       // 2. Validações
-      if (usuario.ativo === false) {
-        return res.status(401).json({ erro: "Usuário desativado." });
-      }
+      if (usuario.ativo === false) return res.status(401).json({ erro: "Usuário desativado." });
+      if (!usuario.senha_hash) return res.status(500).json({ erro: "Usuário corrompido." });
 
-      if (!usuario.senha_hash) {
-        return res.status(500).json({ erro: "Usuário corrompido (sem senha)." });
-      }
-
-      // 3. Verifica Senha
       const senhaValida = await bcrypt.compare(senha, usuario.senha_hash);
-      
-      if (!senhaValida) {
-        return res.status(401).json({ erro: "Senha incorreta." });
-      }
+      if (!senhaValida) return res.status(401).json({ erro: "Senha incorreta." });
 
-      console.log("Login Sucesso:", usuario.email);
+      // 3. A MÁGICA: Buscar o ID do Cliente usando o Email
+      // Como suas tabelas são separadas, usamos o email para achar quem é esse cliente no sistema financeiro
+      const dadosCliente = await prisma.cliente.findFirst({
+        where: { email: usuario.email }
+      });
 
-      // 4. Retorna dados
+      console.log(`Login: Usuario ID ${usuario.id} vinculado ao Cliente ID ${dadosCliente ? dadosCliente.id : 'NENHUM'}`);
+
+      // 4. Retorna tudo
       return res.json({
         id: usuario.id,
         nome: usuario.nome,
         email: usuario.email,
-        role: usuario.role, // Enum do Prisma
+        role: usuario.role,
         token: "token_simulado",
-        // Retorna o nome do perfil (ex: "Cliente", "Admin")
-        perfil: usuario.perfil ? usuario.perfil.nome : null
+        perfil: usuario.perfil ? usuario.perfil.nome : null,
+        // Mandamos o objeto dadosCliente inteiro para o frontend usar
+        dadosCliente: dadosCliente 
       });
 
     } catch (error) {
-      console.error("❌ ERRO NO LOGIN:", error);
+      console.error("ERRO NO LOGIN:", error);
       return res.status(500).json({ erro: "Erro interno no servidor." });
     }
   },
@@ -133,7 +131,7 @@ module.exports = {
       });
 
     } catch (error) {
-      console.error("❌ ERRO NO CADASTRO:", error);
+      console.error("ERRO NO CADASTRO:", error);
       return res.status(500).json({ 
         erro: "Erro ao criar conta.", 
         detalhe: error.message 
