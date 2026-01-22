@@ -1,113 +1,109 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const pdfParse = require('pdf-parse');
+const fs = require('fs');
 
 module.exports = {
-  async criarNota(req, res) {
+  // UPLOAD  
+  async upload(req, res) {
     try {
-      // 1. Recebe os dados do Frontend
-      const { 
-        numero, 
-        valor, 
-        data_emissao, 
-        cnpj_emitente, // Importante: Vamos usar isso para achar o cliente
-        link_pdf 
-      } = req.body;
-
-      // ---------------------------------------------------------
-      // PASSO 1: TRATAMENTO DE DADOS
-      // ---------------------------------------------------------
-
-      // Converter "1234" para Inteiro
-      const numeroInt = parseInt(numero);
-      if (isNaN(numeroInt)) return res.status(400).json({ erro: "Número da nota inválido." });
-
-      // Converter "1500.50" para formato Decimal/Float aceito pelo Prisma
-      const valorDecimal = valor; 
-
-      // Converter Data "dd/mm/aaaa" para Objeto Date
-      const partesData = data_emissao.split('/'); 
-      // Nota: Mês em JS começa em 0. Ex: 01 vira 0 (Janeiro)
-      const dataFormatada = new Date(
-        parseInt(partesData[2]), 
-        parseInt(partesData[1]) - 1, 
-        parseInt(partesData[0])
-      );
-
-      
-      
-      const clienteEncontrado = await prisma.cliente.findFirst({
-        where: {
-           OR: [
-             { cpf_cnpj: cnpj_emitente }, // Busca exata (ex: 12.345...)
-             { cpf_cnpj: cnpj_emitente.replace(/\D/g, '') } // Busca apenas números
-           ]
-        }
-      });
-
-      if (!clienteEncontrado) {
-        return res.status(404).json({ 
-          erro: "Cliente não encontrado.", 
-          detalhe: `Não existe cliente cadastrado com o CNPJ ${cnpj_emitente}. Cadastre-o antes de lançar a nota.` 
-        });
+      if (!req.file) {
+        return res.status(400).json({ erro: "Nenhum arquivo enviado. Verifique se a pasta 'uploads' existe." });
       }
 
-  
-      const novaNotaComFatura = await prisma.notaFiscal.create({
+      const { id_cliente } = req.body;
+      if (!id_cliente || id_cliente === 'undefined') {
+        return res.status(400).json({ erro: "ID do Cliente inválido ou não enviado." });
+      }
+
+      // LER PDF
+      console.log("Lendo PDF...");
+      const dataBuffer = fs.readFileSync(req.file.path);
+      const data = await pdfParse(dataBuffer);
+      const texto = data.text;
+
+      // EXTRAIR VALOR
+      const regexValor = /(?:Total|Valor|R\$)\s*[:.]?\s*(\d{1,3}(?:\.\d{3})*,\d{2})/i;
+      const matchValor = texto.match(regexValor);
+      
+      let valorFinal = 0.0;
+      if (matchValor) {
+        valorFinal = parseFloat(matchValor[1].replace(/\./g, '').replace(',', '.'));
+      }
+
+      console.log(`Salvando para Cliente ID: ${id_cliente} | Valor: ${valorFinal}`);
+      
+      // SALVAR NO BANCO (Cria Fatura + Nota Fiscal)
+      const novaFatura = await prisma.fatura.create({
         data: {
-          // dados da nota fiscal
-          numero: numeroInt,
-          data_emissao: dataFormatada,
-          valor_total: valorDecimal,
-          status_api: 'PENDENTE', 
-          link_pdf: link_pdf || null,
-          
-         
-          fatura: {
+          id_cliente: parseInt(id_cliente),
+          valor_total: valorFinal,
+          data_vencimento: new Date(),
+          status: 'PENDENTE',
+          descricao: 'Nota Fiscal Upload',
+          nota_fiscal: {
             create: {
-              // Conecta ao cliente que achamos lá em cima
-              cliente: {
-                connect: { id: clienteEncontrado.id }
-              },
-              valor_total: valorDecimal, // O valor da fatura é o mesmo da nota
-              status: 'PENDENTE', // Enum StatusFatura
-              data_vencimento: dataFormatada, // Por padrão, vencimento = emissão (Ajuste se tiver regra de +30 dias)
-              
-              // Outros campos opcionais podem ficar null ou ter defaults
-              // id_usuario_criador: req.userId (Se tiver autenticação)
+              numero: Math.floor(Math.random() * 100000),
+              data_emissao: new Date(),
+              valor_total: valorFinal,
+              status_api: 'EMITIDA',
+              link_pdf: req.file.path
             }
           }
         },
-        include: {
-          fatura: true // Retorna a fatura criada junto na resposta
-        }
+        include: { nota_fiscal: true }
       });
 
-      return res.status(201).json({ 
-        sucesso: true, 
-        mensagem: "Nota e Fatura geradas com sucesso!",
-        dados: novaNotaComFatura 
+      return res.status(201).json({
+        sucesso: true,
+        mensagem: "Nota lançada com sucesso!",
+        fatura: novaFatura
       });
 
     } catch (error) {
-      console.error("Erro ao salvar:", error);
+      console.error("ERRO NO UPLOAD:", error);
       return res.status(500).json({ 
-        erro: "Erro interno do servidor.", 
+        erro: "Erro interno no processamento.", 
         detalhe: error.message 
       });
     }
   },
 
-  async listarNotas(req, res) {
+  //  LISTAR 
+  async listar(req, res) {
     try {
       const notas = await prisma.notaFiscal.findMany({
-        orderBy: { id: 'desc' }, 
-        include: {
-          fatura: true 
-        }
+        include: { fatura: true },
+        orderBy: { id: 'desc' }
       });
       return res.json(notas);
     } catch (error) {
-      return res.status(500).json({ erro: "Erro ao buscar notas." });
+      return res.status(500).json({ erro: "Erro ao listar notas" });
     }
+  },
+
+  //  DELETAR 
+  async deletar(req, res) {
+    try {
+      const { id } = req.params;
+      await prisma.notaFiscal.delete({
+        where: { id: Number(id) }
+      });
+      return res.status(204).send();
+    } catch (error) {
+      return res.status(500).json({ erro: "Erro ao deletar nota" });
+    }
+  },
+  
+  // Função legada caso alguma rota antiga chame 'criarNota'
+  async criarNota(req, res) {
+      return res.status(400).json({erro: "Use a rota /notas/upload"});
+  },
+  
+  // Função legada caso alguma rota antiga chame 'listarNotas'
+  async listarNotas(req, res) {
+      // Redireciona para o listar padrão
+      const notas = await prisma.notaFiscal.findMany();
+      return res.json(notas);
   }
 };

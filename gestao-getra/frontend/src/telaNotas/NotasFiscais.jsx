@@ -14,6 +14,7 @@ export function NotasFiscais() {
   const [clienteSelecionado, setClienteSelecionado] = useState(''); // Só usado se for Staff
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState({ tipo: '', texto: '' });
+  const [inputKey, setInputKey] = useState(0);
 
   // Carrega lista de clientes APENAS se for Staff
   useEffect(() => {
@@ -39,26 +40,32 @@ export function NotasFiscais() {
     setMensagem({ tipo: '', texto: '' });
 
     if (!arquivo) {
-      setMensagem({ tipo: 'erro', texto: 'Por favor, selecione um arquivo (PDF ou XML).' });
+      setMensagem({ tipo: 'erro', texto: 'Selecione um arquivo PDF.' });
       return;
     }
 
-    // LÓGICA DE IDENTIFICAÇÃO DO CLIENTE
     let idFinal = null;
 
     if (isStaff) {
-      // Se for Staff, é OBRIGATÓRIO ter escolhido alguém no select
       if (!clienteSelecionado) {
-        setMensagem({ tipo: 'erro', texto: 'Como você é administrador, precisa selecionar a qual cliente essa nota pertence.' });
+        setMensagem({ tipo: 'erro', texto: 'Selecione um cliente da lista.' });
         return;
       }
       idFinal = clienteSelecionado;
     } else {
-      // Se for Cliente, o ID é ele mesmo
-      idFinal = user.id;
+      idFinal = user.dadosCliente?.id;
+      
+      console.log("ID Final calculado:", idFinal);
+
+      if (!idFinal) {
+         setMensagem({ 
+             tipo: 'erro', 
+             texto: 'Erro de Sessão: O sistema não encontrou seu cadastro de Cliente. Tente sair e entrar novamente.' 
+         });
+         return;
+      }
     }
 
-    // Envio
     const formData = new FormData();
     formData.append('arquivo', arquivo);
     formData.append('id_cliente', idFinal);
@@ -66,19 +73,23 @@ export function NotasFiscais() {
     setLoading(true);
 
     try {
-      // Ajuste a rota para a sua rota real do Backend (a que usa Multer)
       await axios.post('http://localhost:3000/notas/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      setMensagem({ tipo: 'sucesso', texto: 'Nota fiscal enviada com sucesso!' });
-      setArquivo(null); // Limpa state do arquivo
-      setClienteSelecionado(''); 
-      // Resetar o input file via DOM é difícil no React puro sem ref, mas o usuário vê a msg de sucesso.
+      setMensagem({ tipo: 'sucesso', texto: 'Nota enviada com sucesso!' });
+      
+      setArquivo(null);
+      setClienteSelecionado('');
+      setInputKey(Date.now()); 
 
     } catch (error) {
-      console.error(error);
-      const msgErro = error.response?.data?.erro || 'Erro ao enviar o arquivo.';
+      console.error("Erro no upload:", error);
+      const msgBack = error.response?.data?.detalhe || '';
+      const msgErro = msgBack.includes('Foreign key') 
+        ? "Erro de Vínculo: O ID do cliente enviado não existe no banco." 
+        : (error.response?.data?.erro || "Erro ao conectar com o servidor.");
+        
       setMensagem({ tipo: 'erro', texto: msgErro });
     } finally {
       setLoading(false);
@@ -138,11 +149,12 @@ export function NotasFiscais() {
                 cursor: 'pointer'
             }}>
                 <input 
-                    type="file" 
-                    accept=".pdf,.xml"
-                    onChange={handleFileChange}
-                    style={{ width: '100%' }}
-                />
+                        key={inputKey}
+                        type="file" 
+                        accept=".pdf,.xml"
+                        onChange={handleFileChange}
+                        style={{ width: '100%' }}
+                    />
                 {!arquivo && <p style={{color: '#999', marginTop: 10}}>Clique para selecionar ou arraste aqui</p>}
             </div>
             {arquivo && (
