@@ -18,6 +18,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 export function Analise() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [usuario] = useState(() => JSON.parse(localStorage.getItem("usuario")));
 
   // --- Processamento dos Gráficos ---
   function processarDadosReais(faturasDoBanco) {
@@ -54,6 +55,32 @@ export function Analise() {
     };
   }
 
+    // --- Gerar Relatório PDF ---
+  const gerarRelatorioPDF = async () => {
+    try {
+      const token = usuario ? usuario.id : "";
+  
+      const response = await axios.get('http://localhost:3000/relatorios/geral', {
+        responseType: 'blob',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+  
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "relatorio-geral.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      alert("Erro ao gerar o relatório! (Talvez você não tenha permissão)");
+    }
+  };
+
   // --- Carregar Dados ---
   const carregarDados = async () => {
     try {
@@ -75,6 +102,10 @@ export function Analise() {
       <main className="main-content">
         <header className="page-header">
           <h2 className="page-title">Análise Financeira</h2>
+          {usuario && usuario.role === "ADMIN_MASTER" && (
+           <button onClick={gerarRelatorioPDF} className="btn-primary" style={{ width: 'auto' }}>
+             Gerar Relatório (PDF)
+           </button>)}
         </header>
 
         {loading || !data ? (

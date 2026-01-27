@@ -3,12 +3,16 @@ const router = express.Router();
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }); 
 
+// Import dos Middlewares
+const { authenticateToken, requireAdminMaster } = require('../middleware/authMiddleware');
+
 // Import dos Controllers
 const authController = require('../controllers/authController');
 const clienteController = require('../controllers/clienteController');
 const faturaController = require('../controllers/faturaController');
 const servicoController = require('../controllers/servicoController');
 const pagamentoController = require('../pagamento/pagamentoController');
+const relatorioController = require('../controllers/relatorioController');
 
 // Importante: Usaremos o notaController unificado que criamos antes
 const notaController = require('../controllers/notaController'); 
@@ -44,5 +48,8 @@ router.delete('/servicos/:id', servicoController.deletar);
 
 //  Pagamento 
 router.post('/pagamento/pix', pagamentoController.gerarPix);
+
+//  Relatórios 
+router.get('/relatorios/geral', authenticateToken, requireAdminMaster, relatorioController.gerarRelatorio);
 
 module.exports = router;
