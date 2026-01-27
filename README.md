@@ -39,8 +39,10 @@ Para rodar o projeto com essas alterações em um novo ambiente:
 
 1.  **Instalar dependência de PDF no Backend:**
     Acesse a pasta do servidor e instale o pacote:
+    ```bash
     cd backend
     npm install pdfkit
+    ```
 
 2.  **Reiniciar o Servidor:**
     Como houve alteração nas rotas e instalação de novos pacotes, é necessário reiniciar o processo do Node.js:
