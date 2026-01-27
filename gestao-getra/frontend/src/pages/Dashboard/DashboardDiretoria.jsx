@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth'; // Importando o hook novo
+import { useAuth } from '../../hooks/useAuth';
 
 export function DashboardDiretoria() {
   const navigate = useNavigate();
-  const { user } = useAuth(); // Pegando user do contexto
+  const { user } = useAuth();
 
   const [resumo, setResumo] = useState({
     totalClientes: 0,
@@ -17,54 +17,70 @@ export function DashboardDiretoria() {
   const [ultimasFaturas, setUltimasFaturas] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Carregar Dados do Banco
-  useEffect(() => {
-    async function carregarDados() {
-      try {
-        // Buscamos Clientes e Faturas ao mesmo tempo
-        const [resClientes, resFaturas] = await Promise.all([
-          axios.get('http://localhost:3000/clientes'),
-          axios.get('http://localhost:3000/faturas')
-        ]);
+  // --- FUNÇÃO DE CARREGAR DADOS ---
+  async function carregarDados() {
+    try {
+      setLoading(true);
+      const [resClientes, resFaturas] = await Promise.all([
+        axios.get('http://localhost:3000/clientes'),
+        axios.get('http://localhost:3000/faturas')
+      ]);
 
-        const clientes = resClientes.data;
-        const faturas = resFaturas.data;
+      const clientes = resClientes.data;
+      const faturas = resFaturas.data;
 
-        // --- CÁLCULOS DOS TOTAIS (Lógica mantida) ---
-        
-        // 1. Total de Receita (Soma de tudo que está PAGO)
-        const receita = faturas
-          .filter(f => f.status === 'PAGA')
-          .reduce((acc, curr) => acc + parseFloat(curr.valor_total), 0);
+      // 1. Receita (PAGO)
+      const receita = faturas
+        .filter(f => f.status === 'PAGA')
+        .reduce((acc, curr) => acc + parseFloat(curr.valor_total), 0);
 
-        // 2. Total Pendente (Soma de tudo que está PENDENTE ou VENCIDA)
-        const pendente = faturas
-          .filter(f => f.status === 'PENDENTE' || f.status === 'VENCIDA')
-          .reduce((acc, curr) => acc + parseFloat(curr.valor_total), 0);
-        
-        const qtdPendente = faturas.filter(f => f.status === 'PENDENTE' || f.status === 'VENCIDA').length;
+      // 2. Pendente
+      const pendente = faturas
+        .filter(f => f.status === 'PENDENTE' || f.status === 'VENCIDA')
+        .reduce((acc, curr) => acc + parseFloat(curr.valor_total), 0);
+      
+      const qtdPendente = faturas.filter(f => f.status === 'PENDENTE' || f.status === 'VENCIDA').length;
 
-        // 3. Pegar as 5 últimas faturas para exibir na lista
-        const ultimas = faturas.slice(-5).reverse(); 
+      // 3. Últimas 5 faturas
+      const ultimas = faturas.slice(-5).reverse(); 
 
-        setResumo({
-          totalClientes: clientes.length,
-          receitaTotal: receita,
-          totalPendente: pendente,
-          qtdPendente: qtdPendente
-        });
+      setResumo({
+        totalClientes: clientes.length,
+        receitaTotal: receita,
+        totalPendente: pendente,
+        qtdPendente: qtdPendente
+      });
 
-        setUltimasFaturas(ultimas);
+      setUltimasFaturas(ultimas);
 
-      } catch (error) {
-        console.error("Erro ao carregar dashboard:", error);
-      } finally {
-        setLoading(false);
-      }
+    } catch (error) {
+      console.error("Erro ao carregar dashboard:", error);
+    } finally {
+      setLoading(false);
     }
+  }
 
+  // Carrega ao montar a tela
+  useEffect(() => {
     carregarDados();
   }, []);
+
+  // --- NOVA FUNÇÃO: BAIXA MANUAL ---
+  async function handleBaixaManual(id) {
+    if (!window.confirm("Confirmar o recebimento manual desta fatura?")) return;
+
+    try {
+      // Atualiza status no banco
+      await axios.put(`http://localhost:3000/faturas/${id}`, { status: 'PAGA' });
+      alert("Pagamento confirmado com sucesso!");
+      
+      // Recarrega os dados para atualizar o gráfico e a tabela
+      carregarDados(); 
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao dar baixa na fatura.");
+    }
+  }
 
   const formatMoney = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
@@ -87,33 +103,24 @@ export function DashboardDiretoria() {
             {/* --- CARDS DE RESUMO --- */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
               
-              {/* Card Clientes */}
               <div className="card" style={styles.card}>
-                <div style={{ ...styles.iconBox, background: '#E0F2FE', color: '#0284C7' }}>
-                  👥
-                </div>
+                <div style={{ ...styles.iconBox, background: '#E0F2FE', color: '#0284C7' }}>👥</div>
                 <div>
                   <p style={styles.cardLabel}>Clientes Ativos</p>
                   <h4 style={styles.cardValue}>{resumo.totalClientes}</h4>
                 </div>
               </div>
 
-              {/* Card Receita */}
               <div className="card" style={styles.card}>
-                <div style={{ ...styles.iconBox, background: '#DCFCE7', color: '#166534' }}>
-                  💰
-                </div>
+                <div style={{ ...styles.iconBox, background: '#DCFCE7', color: '#166534' }}>💰</div>
                 <div>
                   <p style={styles.cardLabel}>Receita Total</p>
                   <h4 style={{ ...styles.cardValue, color: '#166534' }}>{formatMoney(resumo.receitaTotal)}</h4>
                 </div>
               </div>
 
-              {/* Card Pendente */}
               <div className="card" style={styles.card}>
-                <div style={{ ...styles.iconBox, background: '#FFF7ED', color: '#EA580C' }}>
-                  ⚠️
-                </div>
+                <div style={{ ...styles.iconBox, background: '#FFF7ED', color: '#EA580C' }}>⚠️</div>
                 <div>
                   <p style={styles.cardLabel}>A Receber ({resumo.qtdPendente})</p>
                   <h4 style={{ ...styles.cardValue, color: '#EA580C' }}>{formatMoney(resumo.totalPendente)}</h4>
@@ -121,7 +128,7 @@ export function DashboardDiretoria() {
               </div>
             </div>
 
-            {/* --- ÚLTIMAS MOVIMENTAÇÕES --- */}
+            {/* --- ÚLTIMAS MOVIMENTAÇÕES (Com Ações) --- */}
             <div className="card" style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
                 <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#333' }}>Últimas Faturas Geradas (Geral)</h3>
@@ -144,6 +151,7 @@ export function DashboardDiretoria() {
                         <th style={{ padding: '10px' }}>Vencimento</th>
                         <th style={{ padding: '10px' }}>Valor</th>
                         <th style={{ padding: '10px' }}>Status</th>
+                        <th style={{ padding: '10px', textAlign: 'center' }}>Ações</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -163,6 +171,31 @@ export function DashboardDiretoria() {
                               {fatura.status}
                             </span>
                           </td>
+                          
+                          {/* NOVA COLUNA DE AÇÕES */}
+                          <td style={{ padding: '10px', textAlign: 'center' }}>
+                            {fatura.status !== 'PAGA' ? (
+                                <button
+                                    onClick={() => handleBaixaManual(fatura.id)}
+                                    title="Confirmar Pagamento Manual"
+                                    style={{ 
+                                        border: 'none', 
+                                        background: '#f0fdf4', 
+                                        color: '#166534',
+                                        cursor: 'pointer',
+                                        padding: '5px 10px',
+                                        borderRadius: '4px',
+                                        fontWeight: 'bold',
+                                        fontSize: '0.9rem'
+                                    }}
+                                >
+                                    Dar Baixa
+                                </button>
+                            ) : (
+                                <span style={{ color: '#ccc', fontSize: '0.9rem' }}>-</span>
+                            )}
+                          </td>
+
                         </tr>
                       ))}
                     </tbody>
@@ -176,7 +209,6 @@ export function DashboardDiretoria() {
   );
 }
 
-// Estilos CSS-in-JS para facilitar
 const styles = {
   card: {
     display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: 0,

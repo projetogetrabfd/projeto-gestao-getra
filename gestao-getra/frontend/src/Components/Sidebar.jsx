@@ -2,20 +2,18 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export function Sidebar() {
-
-  
-  const location = useLocation(); // Para saber em qual página estamos
+  const location = useLocation();
   const navigate = useNavigate();
   const { user, canAccess } = useAuth();
 
   function handleLogout() {
     if (window.confirm("Deseja realmente sair do sistema?")) {
       localStorage.removeItem('usuario');
+      // Limpar token ou outros dados se necessário
       navigate('/');
     }
   }
 
-  // Função auxiliar para verificar se o link está ativo
   const isActive = (path) => location.pathname === path ? 'menu-item active' : 'menu-item';
 
   return (
@@ -90,7 +88,8 @@ export function Sidebar() {
           </Link>
         )}
 
-        {canAccess('pagamento') && (
+        {/* MUDANÇA AQUI: Só mostra se for CLIENTE explicitamente */}
+        {user?.role === 'CLIENTE' && (
           <Link to="/pagamento" className={isActive('/pagamento')}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '20px', height: '20px' }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />

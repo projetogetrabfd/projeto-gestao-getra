@@ -17,51 +17,69 @@ export function DashboardFinanceiro() {
   const [faturasCriticas, setFaturasCriticas] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function carregarDadosOperacionais() {
-      try {
-        const [resClientes, resFaturas] = await Promise.all([
-          axios.get('http://localhost:3000/clientes'),
-          axios.get('http://localhost:3000/faturas')
-        ]);
+  // --- 1. FUNÇÃO DE CARREGAMENTO (Movida para fora do useEffect) ---
+  async function carregarDadosOperacionais() {
+    try {
+      setLoading(true); // Opcional: Mostra loading enquanto recarrega
+      const [resClientes, resFaturas] = await Promise.all([
+        axios.get('http://localhost:3000/clientes'),
+        axios.get('http://localhost:3000/faturas')
+      ]);
 
-        const clientes = resClientes.data;
-        const faturas = resFaturas.data;
+      const clientes = resClientes.data;
+      const faturas = resFaturas.data;
 
-        // 1. Foco no que está VENCIDO (Prioridade máxima de cobrança)
-        const vencidas = faturas.filter(f => f.status === 'VENCIDA');
-        const totalVencido = vencidas.reduce((acc, curr) => acc + Number(curr.valor_total), 0);
+      // KPI 1: VENCIDO
+      const vencidas = faturas.filter(f => f.status === 'VENCIDA');
+      const totalVencido = vencidas.reduce((acc, curr) => acc + Number(curr.valor_total), 0);
 
-        // 2. Foco no que vai entrar (Fluxo de caixa futuro)
-        const aReceber = faturas
-            .filter(f => f.status === 'PENDENTE')
-            .reduce((acc, curr) => acc + Number(curr.valor_total), 0);
+      // KPI 2: A RECEBER
+      const aReceber = faturas
+          .filter(f => f.status === 'PENDENTE')
+          .reduce((acc, curr) => acc + Number(curr.valor_total), 0);
 
-        // 3. Lista de Prioridades (Vencidas + Pendentes próximas)
-        // Filtramos para não mostrar as PAGAS (que não exigem trabalho)
-        const listaTrabalho = faturas
-            .filter(f => f.status !== 'PAGA')
-            .sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento)) // As mais antigas primeiro
-            .slice(0, 10); // Top 10 urgentes
+      // LISTA DE TRABALHO
+      const listaTrabalho = faturas
+          .filter(f => f.status !== 'PAGA')
+          .sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento))
+          .slice(0, 10);
 
-        setKpis({
-          totalVencido,
-          qtdVencidas: vencidas.length,
-          totalReceber: aReceber,
-          clientesAtivos: clientes.length
-        });
+      setKpis({
+        totalVencido,
+        qtdVencidas: vencidas.length,
+        totalReceber: aReceber,
+        clientesAtivos: clientes.length
+      });
 
-        setFaturasCriticas(listaTrabalho);
+      setFaturasCriticas(listaTrabalho);
 
-      } catch (error) {
-        console.error("Erro dashboard financeiro:", error);
-      } finally {
-        setLoading(false);
-      }
+    } catch (error) {
+      console.error("Erro dashboard financeiro:", error);
+    } finally {
+      setLoading(false);
     }
+  }
 
+  // Carrega ao iniciar
+  useEffect(() => {
     carregarDadosOperacionais();
   }, []);
+
+  // --- 2. NOVA FUNÇÃO: BAIXA MANUAL ---
+  async function handleBaixaManual(id) {
+    if (!window.confirm("Confirmar o recebimento manual desta fatura?")) return;
+
+    try {
+      await axios.put(`http://localhost:3000/faturas/${id}`, { status: 'PAGA' });
+      alert("Pagamento confirmado com sucesso!");
+      
+      // Atualiza a tela para sumir com a fatura paga
+      carregarDadosOperacionais();
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao dar baixa na fatura.");
+    }
+  }
 
   const formatMoney = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
@@ -74,7 +92,7 @@ export function DashboardFinanceiro() {
         <p style={{ color: '#666' }}>Olá, <strong>{user?.nome}</strong>. Aqui estão as pendências de hoje.</p>
       </header>
 
-      {/* --- 1. AÇÕES RÁPIDAS (Botões de Atalho) --- */}
+      {/* AÇÕES RÁPIDAS */}
       <div style={{ display: 'flex', gap: '15px', marginBottom: '30px' }}>
         <button onClick={() => navigate('/clientes')} style={styles.actionButton}>
           ➕ Novo Cliente
@@ -89,24 +107,21 @@ export function DashboardFinanceiro() {
 
       {loading ? <p>Carregando dados...</p> : (
         <>
-          {/* --- 2. INDICADORES DE COBRANÇA --- */}
+          {/* INDICADORES */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
             
-            {/* O mais importante: VENCIDOS */}
             <div style={{ ...styles.card, borderLeft: '5px solid #ef4444' }}>
               <span style={{ color: '#ef4444', fontWeight: 'bold' }}>⚠️ Em Atraso</span>
               <h3 style={{ fontSize: '28px', margin: '10px 0' }}>{formatMoney(kpis.totalVencido)}</h3>
               <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>{kpis.qtdVencidas} faturas vencidas</p>
             </div>
 
-            {/* Fluxo Futuro */}
             <div style={{ ...styles.card, borderLeft: '5px solid #f59e0b' }}>
               <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>⏳ A Receber</span>
               <h3 style={{ fontSize: '28px', margin: '10px 0' }}>{formatMoney(kpis.totalReceber)}</h3>
               <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>Previsão de entrada</p>
             </div>
 
-             {/* Carteira */}
              <div style={{ ...styles.card, borderLeft: '5px solid #3b82f6' }}>
               <span style={{ color: '#3b82f6', fontWeight: 'bold' }}>👥 Carteira</span>
               <h3 style={{ fontSize: '28px', margin: '10px 0' }}>{kpis.clientesAtivos}</h3>
@@ -114,7 +129,7 @@ export function DashboardFinanceiro() {
             </div>
           </div>
 
-          {/* --- 3. LISTA DE COBRANÇA (Faturas Pendentes/Vencidas) --- */}
+          {/* LISTA DE COBRANÇA */}
           <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
             <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: '#444' }}>Fila de Cobrança / Atenção</h3>
             
@@ -133,7 +148,6 @@ export function DashboardFinanceiro() {
                   <tr key={fat.id} style={{ borderBottom: '1px solid #eee' }}>
                     <td style={{ padding: '12px' }}>{fat.cliente?.nome || fat.cliente?.nome_razao_social}</td>
                     
-                    {/* Data colorida se estiver vencida */}
                     <td style={{ padding: '12px', color: fat.status === 'VENCIDA' ? '#ef4444' : '#333', fontWeight: fat.status === 'VENCIDA' ? 'bold' : 'normal' }}>
                         {formatDate(fat.data_vencimento)}
                     </td>
@@ -149,12 +163,32 @@ export function DashboardFinanceiro() {
                         {fat.status}
                       </span>
                     </td>
-                    <td style={{ padding: '12px' }}>
+                    <td style={{ padding: '12px', display: 'flex', gap: '8px' }}>
+                        {/* Botão Ver Detalhes (Mantido) */}
                         <button 
                             onClick={() => navigate(`/pagamento?fatura=${fat.id}`)}
+                            title="Ver Detalhes"
                             style={{ border: '1px solid #ddd', background: 'white', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
                         >
-                            Ver Detalhes
+                            👁️
+                        </button>
+
+                        {/* --- NOVO BOTÃO: BAIXA MANUAL --- */}
+                        <button 
+                            onClick={() => handleBaixaManual(fat.id)}
+                            title="Confirmar Pagamento (Baixa Manual)"
+                            style={{ 
+                                border: '1px solid #bbf7d0', 
+                                background: '#f0fdf4', 
+                                color: '#15803d', 
+                                padding: '5px 10px', 
+                                borderRadius: '4px', 
+                                cursor: 'pointer', 
+                                fontSize: '12px',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            Dar Baixa
                         </button>
                     </td>
                   </tr>
