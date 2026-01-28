@@ -5,6 +5,8 @@ npm-debug.log
 
 /backend/node_modules
 /backend/.env
+/backend/debug-db.js
+/backend/fix-password.js
 
 # === FRONTEND ===
 

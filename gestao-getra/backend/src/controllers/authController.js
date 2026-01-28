@@ -5,36 +5,53 @@ const bcrypt = require('bcryptjs');
 module.exports = {
   // --- LOGIN ---
   async login(req, res) {
-    console.log("--- TENTATIVA DE LOGIN ---");
+    console.log("--- 🕵️‍♂️ DEBUG LOGIN INICIADO ---");
+    
     try {
+      // 1. Ver o que chegou
+      console.log("1. Body Recebido:", req.body);
+      
       const { email, senha } = req.body;
+      
+      if (!email || !senha) {
+          console.log("❌ Erro: Email ou senha faltando no body.");
+          return res.status(400).json({ erro: "Email e senha são obrigatórios" });
+      }
 
-      // 1. Busca Usuário
+      // 2. Tentar buscar (Removendo espaços em branco extras com .trim())
+      const emailLimpo = email.trim();
+      console.log(`2. Buscando no banco pelo email: [${emailLimpo}]`);
+
       const usuario = await prisma.usuario.findUnique({
-        where: { email },
+        where: { email: emailLimpo },
         include: { perfil: true } 
       });
 
+      // 3. Resultado da busca
       if (!usuario) {
+        console.log("❌ RESULTADO: Usuário é NULL (Não encontrado no banco).");
         return res.status(400).json({ erro: "Usuário não encontrado." });
       }
 
-      // 2. Validações
+      console.log(`✅ Usuário encontrado: ID ${usuario.id} | Hash existe? ${!!usuario.senha_hash}`);
+
+      // ... resto da validação de senha ...
       if (usuario.ativo === false) return res.status(401).json({ erro: "Usuário desativado." });
-      if (!usuario.senha_hash) return res.status(500).json({ erro: "Usuário corrompido." });
-
+      
       const senhaValida = await bcrypt.compare(senha, usuario.senha_hash);
-      if (!senhaValida) return res.status(401).json({ erro: "Senha incorreta." });
+      
+      if (!senhaValida) {
+          console.log("❌ Senha inválida.");
+          return res.status(401).json({ erro: "Senha incorreta." });
+      }
 
-      // 3. A MÁGICA: Buscar o ID do Cliente usando o Email
-      // Como suas tabelas são separadas, usamos o email para achar quem é esse cliente no sistema financeiro
+      // Busca dados do cliente
       const dadosCliente = await prisma.cliente.findFirst({
         where: { email: usuario.email }
       });
 
-      console.log(`Login: Usuario ID ${usuario.id} vinculado ao Cliente ID ${dadosCliente ? dadosCliente.id : 'NENHUM'}`);
+      console.log("🚀 Login Sucesso! Token gerado.");
 
-      // 4. Retorna tudo
       return res.json({
         id: usuario.id,
         nome: usuario.nome,
@@ -42,13 +59,12 @@ module.exports = {
         role: usuario.role,
         token: "token_simulado",
         perfil: usuario.perfil ? usuario.perfil.nome : null,
-        // Mandamos o objeto dadosCliente inteiro para o frontend usar
         dadosCliente: dadosCliente 
       });
 
     } catch (error) {
-      console.error("ERRO NO LOGIN:", error);
-      return res.status(500).json({ erro: "Erro interno no servidor." });
+      console.error("❌ ERRO FATAL NO LOGIN:", error);
+      return res.status(500).json({ erro: "Erro interno." });
     }
   },
 

@@ -1,201 +1,181 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
 
 export function Pagamento() {
-  const [valor, setValor] = useState('');
-  const [descricao, setDescricao] = useState('');
-  const [qrCodeData, setQrCodeData] = useState(null);
+  const { user } = useAuth();
+  
+  // Estados
+  const [faturasPendentes, setFaturasPendentes] = useState([]);
+  const [selecionadas, setSelecionadas] = useState([]); // Array de IDs
+  const [dadosPix, setDadosPix] = useState(null); // Guarda o QR Code gerado
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [erro, setErro] = useState('');
 
-  const gerarPix = async (e) => {
-    e.preventDefault();
+  // 1. Carregar Faturas do Cliente
+  useEffect(() => {
+    async function carregarFaturas() {
+      if (!user || !user.dadosCliente) return;
+
+      try {
+        const res = await axios.get('http://localhost:3000/faturas');
+        // Filtra: Só faturas DESTE cliente e que estão PENDENTES ou VENCIDAS
+        const minhasPendencias = res.data.filter(f => 
+            f.id_cliente === user.dadosCliente.id && 
+            (f.status === 'PENDENTE' || f.status === 'VENCIDA')
+        );
+        setFaturasPendentes(minhasPendencias);
+      } catch (err) {
+        console.error("Erro ao buscar faturas", err);
+      }
+    }
+    carregarFaturas();
+  }, [user]);
+
+  // 2. Lógica de Seleção (Checkbox)
+  const toggleFatura = (id) => {
+    if (selecionadas.includes(id)) {
+      setSelecionadas(selecionadas.filter(item => item !== id)); // Remove
+    } else {
+      setSelecionadas([...selecionadas, id]); // Adiciona
+    }
+    // Se mudar a seleção, limpa o QR Code antigo pois o valor mudou
+    setDadosPix(null);
+  };
+
+  // 3. Calcular Total
+  const valorTotal = faturasPendentes
+    .filter(f => selecionadas.includes(f.id))
+    .reduce((acc, curr) => acc + parseFloat(curr.valor_total), 0);
+
+  // 4. Gerar o PIX
+  const handleGerarPix = async () => {
+    if (valorTotal <= 0) return;
     setLoading(true);
-    setError(null);
-    setQrCodeData(null);
+    setErro('');
 
     try {
-      // Chama o BACKEND (Rota corrigida, sem /api pois o index.js não define prefixo global)
       const response = await axios.post('http://localhost:3000/pagamento/pix', {
-        valor: parseFloat(valor),
-        descricao: descricao,
-        email: 'cliente@exemplo.com' 
+        valor: valorTotal,
+        descricao: `Pagamento de ${selecionadas.length} fatura(s)`,
+        email_pagador: user.email,
+        ids_faturas: selecionadas
       });
 
-      setQrCodeData(response.data);
+      setDadosPix(response.data);
     } catch (err) {
-      console.error("Erro detalhado:", err.response ? err.response.data : err.message);
-      setError('Erro ao gerar QR Code. Verifique se o backend está rodando.');
+      console.error(err);
+      setErro('Erro ao gerar QR Code. Tente novamente.');
     } finally {
       setLoading(false);
     }
   };
 
+  // 5. Função de Copiar Código
   const copiarCodigo = () => {
-    if (qrCodeData?.qr_code) {
-      navigator.clipboard.writeText(qrCodeData.qr_code);
-      alert('Código Pix copiado!');
+    if (dadosPix) {
+      navigator.clipboard.writeText(dadosPix.qr_code);
+      alert("Código PIX copiado!");
     }
   };
 
+  // Helpers de formatação
+  const formatMoney = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+  const formatDate = (date) => new Date(date).toLocaleDateString('pt-BR');
+
+  if (!user) return <div>Carregando...</div>;
+
   return (
-    
-      
-      <main className="main-content">
-        <header className="page-header">
-          <h2 className="page-title">Pagamento via Pix</h2>
-        </header>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+      <h2 style={{ marginBottom: '20px', color: '#333' }}>Realizar Pagamento</h2>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem', marginTop: '2rem' }}>
-          
-          {/* Formulário */}
-          <div className="card">
-            <h2>Gerar Cobrança</h2>
-            <form onSubmit={gerarPix} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#374151' }}>
-                  Valor (R$)
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }}>R$</span>
-                  <input 
-                    type="number" 
-                    step="0.01"
-                    value={valor} 
-                    onChange={(e) => setValor(e.target.value)} 
-                    required 
-                    placeholder="0,00"
-                    style={{ 
-                      width: '100%', 
-                      padding: '0.75rem 1rem 0.75rem 2.5rem', 
-                      borderRadius: '8px',
-                      border: '1px solid #d1d5db',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#009ee3'}
-                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                  />
-                </div>
-              </div>
+      {/* SEÇÃO 1: LISTA DE FATURAS */}
+      <div className="card">
+        <h3>1. Selecione as faturas para pagar</h3>
+        
+        {faturasPendentes.length === 0 ? (
+          <p style={{ color: '#666', padding: '20px 0' }}>🎉 Você não tem faturas pendentes!</p>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px' }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
+                <th style={{ padding: '10px' }}>Selecionar</th>
+                <th>Descrição</th>
+                <th>Vencimento</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {faturasPendentes.map(fat => (
+                <tr key={fat.id} style={{ borderBottom: '1px solid #eee' }}>
+                  <td style={{ padding: '10px' }}>
+                    <input 
+                      type="checkbox"
+                      checked={selecionadas.includes(fat.id)}
+                      onChange={() => toggleFatura(fat.id)}
+                      style={{ transform: 'scale(1.5)', cursor: 'pointer' }}
+                    />
+                  </td>
+                  <td>{fat.descricao || fat.recorrencia?.servico?.nome || 'Fatura Avulsa'}</td>
+                  <td>{formatDate(fat.data_vencimento)}</td>
+                  <td style={{ fontWeight: 'bold', color: '#333' }}>{formatMoney(fat.valor_total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#374151' }}>
-                  Descrição
-                </label>
-                <input 
-                  type="text" 
-                  value={descricao} 
-                  onChange={(e) => setDescricao(e.target.value)} 
-                  placeholder="Ex: Mensalidade Janeiro"
-                  style={{ 
-                    width: '100%', 
-                    padding: '0.75rem 1rem', 
-                    borderRadius: '8px',
-                    border: '1px solid #d1d5db',
-                    fontSize: '1rem',
-                    outline: 'none',
-                    transition: 'border-color 0.2s',
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#009ee3'}
-                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                />
-              </div>
+        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+            <span style={{ fontSize: '1.2rem' }}>Total Selecionado:</span>
+            <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#166534' }}>
+                {formatMoney(valorTotal)}
+            </span>
+        </div>
+        
+        <button 
+            onClick={handleGerarPix}
+            disabled={valorTotal === 0 || loading}
+            className="btn-primary"
+            style={{ width: '100%', marginTop: '20px', fontSize: '1.1rem', opacity: valorTotal === 0 ? 0.5 : 1 }}
+        >
+            {loading ? 'Gerando PIX...' : `Gerar PIX de ${formatMoney(valorTotal)}`}
+        </button>
 
-              <button 
-                type="submit" 
-                disabled={loading}
-                style={{ 
-                  marginTop: '1rem',
-                  padding: '1rem', 
-                  backgroundColor: loading ? '#9ca3af' : '#009ee3', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: '8px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  fontWeight: '600',
-                  fontSize: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseOver={(e) => !loading && (e.target.style.backgroundColor = '#0284c7')}
-                onMouseOut={(e) => !loading && (e.target.style.backgroundColor = '#009ee3')}
-              >
-                {loading ? (
-                  <>Processing...</>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '20px', height: '20px' }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
-                    </svg>
-                    Gerar QR Code Pix
-                  </>
-                )}
-              </button>
-            </form>
-            {error && <p style={{ color: 'red', marginTop: '1rem' }}>{error}</p>}
-          </div>
+        {erro && <p style={{ color: 'red', marginTop: 10, textAlign: 'center' }}>{erro}</p>}
+      </div>
 
-          {/* Exibição do QR Code */}
-          {qrCodeData && (
-            <div className="card" style={{ textAlign: 'center' }}>
-              <h2 style={{ color: '#10b981' }}>Pagamento Gerado!</h2>
-              
-              {qrCodeData.qr_code_base64 && (
+      {/* SEÇÃO 2: EXIBIÇÃO DO QR CODE */}
+      {dadosPix && (
+        <div className="card" style={{ marginTop: '30px', textAlign: 'center', border: '2px solid #22c55e', background: '#f0fdf4' }}>
+            <h3 style={{ color: '#166534' }}>Escaneie para pagar</h3>
+            <p style={{ marginBottom: '20px' }}>Abra o app do seu banco e escolha "Pagar com Pix"</p>
+            
+            {/* Imagem do QR Code Base64 */}
+            {dadosPix.qr_code_base64 && (
                 <img 
-                  src={`data:image/jpeg;base64,${qrCodeData.qr_code_base64}`} 
-                  alt="QR Code Pix" 
-                  style={{ width: '250px', height: '250px', margin: '1rem auto' }}
+                    src={`data:image/png;base64,${dadosPix.qr_code_base64}`} 
+                    alt="QR Code Pix"
+                    style={{ maxWidth: '250px', margin: '0 auto', display: 'block' }} 
                 />
-              )}
-              
-              <div style={{ marginTop: '1rem' }}>
-                <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>Copie e cole no app do seu banco:</p>
+            )}
+
+            <div style={{ marginTop: '20px' }}>
+                <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '5px' }}>Ou copie o código abaixo:</p>
                 <textarea 
-                  readOnly 
-                  value={qrCodeData.qr_code} 
-                  style={{ width: '100%', height: '80px', fontSize: '0.8rem', resize: 'none' }} 
+                    readOnly 
+                    value={dadosPix.qr_code} 
+                    style={{ width: '100%', height: '80px', fontSize: '0.8rem', padding: '10px', background: '#fff' }}
                 />
                 <button 
-                  onClick={copiarCodigo} 
-                  style={{ 
-                    marginTop: '0.5rem', 
-                    padding: '0.5rem 1rem', 
-                    backgroundColor: '#10b981', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '4px', 
-                    cursor: 'pointer' 
-                  }}
+                    onClick={copiarCodigo}
+                    style={{ marginTop: '10px', padding: '10px 20px', background: '#166534', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
                 >
-                  Copiar Código Pix
+                    Copiar Código Pix
                 </button>
-              </div>
-              
-              {qrCodeData.ticket_url && (
-                <div style={{ marginTop: '1rem' }}>
-                  <a href={qrCodeData.ticket_url} target="_blank" rel="noopener noreferrer">
-                    Ver Ticket no Mercado Pago
-                  </a>
-                </div>
-              )}
-
-              <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#fff3cd', color: '#856404', borderRadius: '4px', fontSize: '0.9rem' }}>
-                <strong>⚠️ Modo de Teste (Sandbox)</strong>
-                <p style={{ margin: '0.5rem 0 0' }}>
-                  Este QR Code é fictício e <strong>NÃO</strong> será reconhecido por apps de banco reais (Nubank, Itaú, etc.).
-                  Para simular o pagamento, use uma conta de teste do Mercado Pago.
-                </p>
-              </div>
             </div>
-          )}
         </div>
-      </main>
-    
+      )}
+
+    </div>
   );
 }
