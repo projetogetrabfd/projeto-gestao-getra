@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Permite ler dados de formulários padrão
 app.use(routes); 
 
-const PORT = 3000;
+const PORT = 2000;
 app.listen(PORT, () => {
   console.log(` Servidor rodando na porta http://localhost:${PORT}`);
 });
