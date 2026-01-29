@@ -16,7 +16,7 @@ export function Clientes() {
 
   // --- BUSCAR CLIENTES ---
   const carregarClientes = () => {
-    axios.get('http://localhost:3000/clientes')
+    axios.get('http://82.208.21.143:2000/clientes')
       .then(response => setClientes(response.data))
       .catch(error => console.error("Erro:", error));
   };
@@ -64,10 +64,10 @@ export function Clientes() {
 
     try {
       if (idEmEdicao) {
-        await axios.put(`http://localhost:3000/clientes/${idEmEdicao}`, dados);
+        await axios.put(`http://82.208.21.143:2000/clientes/${idEmEdicao}`, dados);
         alert("Cliente atualizado com sucesso!");
       } else {
-        await axios.post('http://localhost:3000/clientes', dados);
+        await axios.post('http://82.208.21.143:2000/clientes', dados);
         alert("Cliente cadastrado com sucesso!");
       }
       
@@ -86,7 +86,7 @@ export function Clientes() {
     
     if (confirmacao) {
       try {
-        await axios.delete(`http://localhost:3000/clientes/${id}`);
+        await axios.delete(`http://82.208.21.143:2000/clientes/${id}`);
         alert("Cliente removido!");
         carregarClientes();
       } catch (error) {

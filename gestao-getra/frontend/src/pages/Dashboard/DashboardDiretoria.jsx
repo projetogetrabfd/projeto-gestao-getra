@@ -23,8 +23,8 @@ export function DashboardDiretoria() {
       try {
         // Buscamos Clientes e Faturas ao mesmo tempo
         const [resClientes, resFaturas] = await Promise.all([
-          axios.get('http://localhost:3000/clientes'),
-          axios.get('http://localhost:3000/faturas')
+          axios.get('http://82.208.21.143:2000/clientes'),
+          axios.get('http://82.208.21.143:2000/faturas')
         ]);
 
         const clientes = resClientes.data;

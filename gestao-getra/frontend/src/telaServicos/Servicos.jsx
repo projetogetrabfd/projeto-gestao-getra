@@ -14,7 +14,7 @@ export function Servicos() {
   // Carregar dados
   const carregarServicos = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/servicos');
+      const response = await axios.get('http://82.208.21.143:2000/servicos');
       setServicos(response.data);
     } catch (error) {
       console.error("Erro ao buscar serviços", error);
@@ -48,10 +48,10 @@ export function Servicos() {
 
     try {
       if (idEmEdicao) {
-        await axios.put(`http://localhost:3000/servicos/${idEmEdicao}`, dados);
+        await axios.put(`http://82.208.21.143:2000/servicos/${idEmEdicao}`, dados);
         alert("Serviço atualizado!");
       } else {
-        await axios.post('http://localhost:3000/servicos', dados);
+        await axios.post('http://82.208.21.143:2000/servicos', dados);
         alert("Serviço criado!");
       }
       setModalAberto(false);
@@ -65,7 +65,7 @@ export function Servicos() {
   async function handleDeletar(id) {
     if (window.confirm("Deseja excluir este serviço?")) {
       try {
-        await axios.delete(`http://localhost:3000/servicos/${id}`);
+        await axios.delete(`http://82.208.21.143:2000/servicos/${id}`);
         carregarServicos();
       } catch (error) {
         alert("Erro ao excluir.");

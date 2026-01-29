@@ -29,7 +29,7 @@ export function DashboardCliente() {
       }
 
       try {
-        const response = await axios.get('http://localhost:3000/faturas');
+        const response = await axios.get('http://82.208.21.143:2000/faturas');
         const todasFaturas = response.data;
 
         // FILTRO CORRIGIDO: Compara com idClienteReal

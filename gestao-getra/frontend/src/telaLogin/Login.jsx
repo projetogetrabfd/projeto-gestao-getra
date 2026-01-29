@@ -16,7 +16,7 @@ export function Login() {
 
     try {
       // A ROTA TEM QUE SER /auth/login
-      const response = await axios.post('http://82.208.21.143:2000/login', {
+      const response = await axios.post('http://82.208.21.143:2000/auth/login', {
         email,
         senha
       });

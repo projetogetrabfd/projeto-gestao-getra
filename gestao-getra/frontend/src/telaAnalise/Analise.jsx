@@ -60,7 +60,7 @@ export function Analise() {
     try {
       const token = usuario ? usuario.id : "";
   
-      const response = await axios.get('http://localhost:3000/relatorios/geral', {
+      const response = await axios.get('http://82.208.21.143:2000/relatorios/geral', {
         responseType: 'blob',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -85,7 +85,7 @@ export function Analise() {
   const carregarDados = async () => {
     try {
       setLoading(true);
-      const resFaturas = await axios.get('http://localhost:3000/faturas');
+      const resFaturas = await axios.get('http://82.208.21.143:2000/faturas');
       const dadosProcessados = processarDadosReais(resFaturas.data);
       setData(dadosProcessados);
     } catch (error) {

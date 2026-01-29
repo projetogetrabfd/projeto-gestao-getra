@@ -22,7 +22,7 @@ export function Cadastro() {
 
     try {
       // Ajuste para a rota que criamos no passo 2
-      await axios.post('http://localhost:3000/auth/register', {
+      await axios.post('http://82.208.21.143:2000/auth/register', {
         nome: formData.nome,
         email: formData.email,
         senha: formData.senha,

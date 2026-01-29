@@ -18,7 +18,7 @@ export function Pagamento() {
       if (!user || !user.dadosCliente) return;
 
       try {
-        const res = await axios.get('http://localhost:3000/faturas');
+        const res = await axios.get('http://82.208.21.143:2000/faturas');
         // Filtra: Só faturas DESTE cliente e que estão PENDENTES ou VENCIDAS
         const minhasPendencias = res.data.filter(f => 
             f.id_cliente === user.dadosCliente.id && 
@@ -55,7 +55,7 @@ export function Pagamento() {
     setErro('');
 
     try {
-      const response = await axios.post('http://localhost:3000/pagamento/pix', {
+      const response = await axios.post('http://82.208.21.143:2000/pagamento/pix', {
         valor: valorTotal,
         descricao: `Pagamento de ${selecionadas.length} fatura(s)`,
         email_pagador: user.email,
