@@ -65,7 +65,7 @@ export function Servicos() {
   async function handleDeletar(id) {
     if (window.confirm("Deseja excluir este serviço?")) {
       try {
-        await axios.delete(`http://82.208.21.143:2000/servicos/${id}`);
+        await axios.delete(`http://localhost:2000/servicos/${id}`);
         carregarServicos();
       } catch (error) {
         alert("Erro ao excluir.");

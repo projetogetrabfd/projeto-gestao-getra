@@ -26,9 +26,9 @@ export function Faturas() {
       setLoading(true);
       
       const [resClientes, resFaturas, resServicos] = await Promise.all([
-        axios.get('http://localhost:3000/clientes'),
-        axios.get('http://localhost:3000/faturas'),
-        axios.get('http://localhost:3000/servicos')
+        axios.get('http://localhost:2000/clientes'),
+        axios.get('http://localhost:2000/faturas'),
+        axios.get('http://localhost:2000/servicos')
       ]);
 
       setListaClientes(resClientes.data);
@@ -64,7 +64,7 @@ export function Faturas() {
   async function handleSalvarFatura(e) {
     e.preventDefault();
     try {
-      await axios.post('http://82.208.21.143:2000/faturas', {
+      await axios.post('http://localhost:2000/faturas', {
         id_cliente: clienteSelecionado,
         valor_total: valor,
         data_vencimento: dataVencimento,
@@ -85,7 +85,7 @@ export function Faturas() {
   async function handleDeletar(id) {
     if (window.confirm("Tem certeza que deseja apagar essa fatura?")) {
       try {
-        await axios.delete(`http://82.208.21.143:2000/faturas${id}`);
+        await axios.delete(`http://localhost:2000/faturas${id}`);
         carregarTudo();
       } catch (error) {
         alert("Erro ao deletar.");
@@ -95,7 +95,7 @@ export function Faturas() {
 
   async function mudarStatus(id, novoStatus) {
     try {
-      await axios.put(`http://82.208.21.143:2000/faturas/${id}`, { status: novoStatus });
+      await axios.put(`http://localhost:2000/faturas/${id}`, { status: novoStatus });
       carregarTudo();
     } catch (error) {
       alert("Erro ao atualizar status.");

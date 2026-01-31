@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
 // Importação das Telas Públicas
+import { LandingPage } from './pages/LandingPage';
 import { Login } from './telaLogin/Login';
 import { Cadastro } from './telaLogin/cadastroUsuario/CadastroUsuario';
 import { RedefinirSenha } from './telaLogin/redefinirSenha/RedefinirSenha';
@@ -24,7 +25,7 @@ function App() {
     <Routes>
       
       {/* rotas públicas - sem sidebar */}
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Cadastro />} />
       <Route path="/redefinir" element={<RedefinirSenha />} />

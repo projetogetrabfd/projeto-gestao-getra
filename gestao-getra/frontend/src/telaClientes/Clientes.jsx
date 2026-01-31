@@ -16,7 +16,7 @@ export function Clientes() {
 
   // --- BUSCAR CLIENTES ---
   const carregarClientes = () => {
-    axios.get('http://82.208.21.143:2000/clientes')
+    axios.get('http://localhost:2000/clientes')
       .then(response => setClientes(response.data))
       .catch(error => console.error("Erro:", error));
   };
